@@ -301,7 +301,7 @@ function exportToCSV() {
         let priority = 'Normal';
         if (daysDiff < 0) {
             priority = 'OVERDUE';
-        } else if (daysDiff <= 7) {
+        } else if (daysDiff <= 10) {
             priority = 'HIGH';
         }
         
@@ -454,11 +454,11 @@ function updateHistoryView() {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-            return daysDiff >= 0 && daysDiff <= 7;
+            return daysDiff >= 0 && daysDiff <= 10;
         }).length;
         
         let retentionInfo = '';
-        if (daysRemaining <= 7) {
+        if (daysRemaining <= 10) {
             retentionInfo = `<span style="color: #dc3545; font-weight: 600;">⚠️ Expires in ${daysRemaining} day(s)</span>`;
         } else if (daysRemaining <= 30) {
             retentionInfo = `<span style="color: #ffc107;">📅 ${daysRemaining} days remaining</span>`;
