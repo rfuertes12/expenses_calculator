@@ -151,7 +151,7 @@ function updateTable() {
             priorityBadge = '<span class="priority-badge" style="background: #dc3545;">OVERDUE</span>';
             rowClass = 'priority-high';
             dueDateClass = 'due-date overdue';
-        } else if (daysDiff <= 7) {
+        } else if (daysDiff <= 10) {
             priorityBadge = '<span class="priority-badge">HIGH</span>';
             rowClass = 'priority-high';
         }
