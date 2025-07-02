@@ -513,6 +513,11 @@
                 return;
             }
 
+            // Sort expenses by due date (earliest first)
+            const sortedExpenses = [...expenses].sort((a, b) => {
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
             const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -532,7 +537,7 @@
                     <tbody>
             `;
             
-            expenses.forEach(expense => {
+            sortedExpenses.forEach(expense => {
                 const dueDate = new Date(expense.dueDate);
                 dueDate.setHours(0, 0, 0, 0);
                 const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
@@ -676,11 +681,16 @@
                 return;
             }
 
+            // Sort expenses by due date for export too
+            const sortedExpenses = [...expenses].sort((a, b) => {
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            });
+
             let csvContent = "Biller,Description,Amount,Due Date,Priority\n";
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             
-            expenses.forEach(expense => {
+            sortedExpenses.forEach(expense => {
                 const dueDate = new Date(expense.dueDate);
                 dueDate.setHours(0, 0, 0, 0);
                 const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
