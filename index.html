@@ -28,6 +28,42 @@
             backdrop-filter: blur(10px);
         }
 
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #6c757d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
         h1 {
             text-align: center;
             color: #333;
@@ -408,29 +444,74 @@
     <div class="container">
         <h1>💰 Monthly Expenses Tracker</h1>
         
-        <button class="add-expense-btn" onclick="openModal()">
-            ➕ Add New Expense
-        </button>
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('current')">📝 Current Bills</button>
+            <button class="tab" onclick="switchTab('history')">📚 History</button>
+        </div>
 
-        <div class="table-container">
-            <div class="table-actions">
-                <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
-                <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
-                <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
-                <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
+        <!-- Current Bills Tab -->
+        <div id="current-tab" class="tab-content active">
+            <button class="add-expense-btn" onclick="openModal()">
+                ➕ Add New Expense
+            </button>
+
+            <div class="table-container">
+                <div class="table-actions">
+                    <button class="btn btn-save-table" onclick="openSaveModal()">💾 Save Table</button>
+                    <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
+                    <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
+                    <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
+                    <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
+                </div>
+                
+                <div id="tableContent">
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <h3>No expenses added yet</h3>
+                        <p>Click "Add New Expense" to get started</p>
+                    </div>
+                </div>
             </div>
-            
-            <div id="tableContent">
-                <div class="empty-state">
-                    <div class="empty-icon">📝</div>
-                    <h3>No expenses added yet</h3>
-                    <p>Click "Add New Expense" to get started</p>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history-tab" class="tab-content">
+            <div id="historyContent">
+                <div class="empty-history">
+                    <div class="empty-icon">📚</div>
+                    <h3>No saved tables yet</h3>
+                    <p>Save your current bill table to start building your history</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Save Table Modal -->
+    <div id="saveModal" class="modal save-modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeSaveModal()">&times;</span>
+            <h2>Save Current Table</h2>
+            
+            <form id="saveForm">
+                <div class="form-group">
+                    <label for="tableName">Table Name:</label>
+                    <input type="text" id="tableName" name="tableName" required placeholder="e.g., January 2025 Bills">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tableDescription">Description (Optional):</label>
+                    <input type="text" id="tableDescription" name="tableDescription" placeholder="e.g., First payout of the month">
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">💾 Save Table</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Expense Modal -->
     <div id="expenseModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
@@ -469,6 +550,8 @@
     <script>
         let expenses = [];
         let editingExpenseId = null;
+        let savedTables = [];
+        let currentTab = 'current';
 
         function openModal() {
             if (editingExpenseId) {
@@ -756,7 +839,295 @@
             return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
         }
 
-        // Form submission
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.tab:nth-child(${tabName === 'current' ? '1' : '2'})`).classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            currentTab = tabName;
+            
+            if (tabName === 'history') {
+                updateHistoryView();
+            }
+        }
+
+        function openSaveModal() {
+            if (expenses.length === 0) {
+                alert('No expenses to save! Add some expenses first.');
+                return;
+            }
+            if (editingExpenseId) {
+                alert('Please save or cancel the current edit before saving the table.');
+                return;
+            }
+            document.getElementById('saveModal').style.display = 'block';
+        }
+
+        function closeSaveModal() {
+            document.getElementById('saveModal').style.display = 'none';
+            document.getElementById('saveForm').reset();
+        }
+
+        function saveCurrentTable(name, description) {
+            const savedTable = {
+                id: Date.now(),
+                name: name,
+                description: description || '',
+                expenses: JSON.parse(JSON.stringify(expenses)), // Deep copy
+                savedDate: new Date().toISOString(),
+                totalAmount: expenses.reduce((sum, expense) => sum + expense.amount, 0)
+            };
+            
+            savedTables.push(savedTable);
+            updateHistoryView();
+            closeSaveModal();
+            
+            // Show success message
+            alert(`Table "${name}" saved successfully!`);
+        }
+
+        function updateHistoryView() {
+            const historyContent = document.getElementById('historyContent');
+            
+            if (savedTables.length === 0) {
+                historyContent.innerHTML = `
+                    <div class="empty-history">
+                        <div class="empty-icon">📚</div>
+                        <h3>No saved tables yet</h3>
+                        <p>Save your current bill table to start building your history</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort saved tables by date (newest first)
+            const sortedTables = [...savedTables].sort((a, b) => new Date(b.savedDate) - new Date(a.savedDate));
+            
+            let historyHTML = '';
+            
+            sortedTables.forEach(table => {
+                const savedDate = new Date(table.savedDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const overdueBills = table.expenses.filter(expense => {
+                    const dueDate = new Date(expense.dueDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    return dueDate < today;
+                }).length;
+                
+                const highPriorityBills = table.expenses.filter(expense => {
+                    const dueDate = new Date(expense.dueDate);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    return daysDiff >= 0 && daysDiff <= 7;
+                }).length;
+                
+                historyHTML += `
+                    <div class="history-item">
+                        <div class="history-header">
+                            <div class="history-title">${table.name}</div>
+                            <div class="history-date">${savedDate}</div>
+                        </div>
+                        ${table.description ? `<p style="color: #6c757d; margin-bottom: 15px;">${table.description}</p>` : ''}
+                        <div class="history-summary">
+                            <div class="history-stat">📋 <strong>${table.expenses.length}</strong> bills</div>
+                            <div class="history-stat">💰 <strong>₱${table.totalAmount.toFixed(2)}</strong> total</div>
+                            ${overdueBills > 0 ? `<div class="history-stat" style="background: #f8d7da; color: #721c24;">⚠️ <strong>${overdueBills}</strong> overdue</div>` : ''}
+                            ${highPriorityBills > 0 ? `<div class="history-stat" style="background: #fff3cd; color: #856404;">🔥 <strong>${highPriorityBills}</strong> high priority</div>` : ''}
+                        </div>
+                        <div class="history-actions">
+                            <button class="btn btn-view btn-small" onclick="viewSavedTable(${table.id})">👁️ View</button>
+                            <button class="btn btn-restore btn-small" onclick="restoreTable(${table.id})">🔄 Restore</button>
+                            <button class="btn btn-export btn-small" onclick="exportSavedTable(${table.id})">📊 Export</button>
+                            <button class="btn btn-delete-history btn-small" onclick="deleteSavedTable(${table.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyContent.innerHTML = historyHTML;
+        }
+
+        function viewSavedTable(tableId) {
+            const table = savedTables.find(t => t.id === tableId);
+            if (!table) return;
+            
+            // Create a temporary view modal
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let tableHTML = `
+                <div class="modal-content" style="max-width: 90%; max-height: 80%; overflow-y: auto;">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h2>${table.name}</h2>
+                    ${table.description ? `<p style="color: #6c757d; margin-bottom: 20px;">${table.description}</p>` : ''}
+                    <p style="color: #6c757d; margin-bottom: 20px;">Saved on: ${new Date(table.savedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: linear-gradient(45deg, #667eea, #764ba2); color: white;">
+                                <th style="padding: 12px; text-align: left;">Biller</th>
+                                <th style="padding: 12px; text-align: left;">Description</th>
+                                <th style="padding: 12px; text-align: left;">Amount</th>
+                                <th style="padding: 12px; text-align: left;">Due Date</th>
+                                <th style="padding: 12px; text-align: left;">Priority</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            // Sort expenses by due date
+            const sortedExpenses = [...table.expenses].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            
+            sortedExpenses.forEach(expense => {
+                const dueDate = new Date(expense.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                let priorityBadge = '';
+                let rowStyle = 'padding: 12px; border-bottom: 1px solid #e9ecef;';
+                
+                if (daysDiff < 0) {
+                    priorityBadge = '<span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">OVERDUE</span>';
+                    rowStyle += ' background-color: #fff3cd;';
+                } else if (daysDiff <= 7) {
+                    priorityBadge = '<span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">HIGH</span>';
+                    rowStyle += ' background-color: #fff3cd;';
+                }
+                
+                const formattedDate = new Date(expense.dueDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                tableHTML += `
+                    <tr>
+                        <td style="${rowStyle}">${expense.biller}</td>
+                        <td style="${rowStyle}">${expense.description}</td>
+                        <td style="${rowStyle} font-weight: 600; color: #dc3545;">₱${expense.amount.toFixed(2)}</td>
+                        <td style="${rowStyle}">${formattedDate}</td>
+                        <td style="${rowStyle}">${priorityBadge}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: linear-gradient(45deg, #28a745, #20c997); color: white; font-weight: 700;">
+                                <td colspan="2" style="padding: 12px;"><strong>Total</strong></td>
+                                <td colspan="3" style="padding: 12px;"><strong>₱${table.totalAmount.toFixed(2)}</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            
+            modal.innerHTML = tableHTML;
+            document.body.appendChild(modal);
+        }
+
+        function restoreTable(tableId) {
+            if (editingExpenseId) {
+                alert('Please save or cancel the current edit before restoring a table.');
+                return;
+            }
+            
+            const table = savedTables.find(t => t.id === tableId);
+            if (!table) return;
+            
+            if (expenses.length > 0) {
+                if (!confirm('This will replace your current expenses. Continue?')) {
+                    return;
+                }
+            }
+            
+            expenses = JSON.parse(JSON.stringify(table.expenses)); // Deep copy
+            switchTab('current');
+            updateTable();
+            alert(`Table "${table.name}" restored successfully!`);
+        }
+
+        function exportSavedTable(tableId) {
+            const table = savedTables.find(t => t.id === tableId);
+            if (!table) return;
+            
+            const sortedExpenses = [...table.expenses].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let csvContent = "Biller,Description,Amount,Due Date,Priority\n";
+            
+            sortedExpenses.forEach(expense => {
+                const dueDate = new Date(expense.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                let priority = 'Normal';
+                if (daysDiff < 0) {
+                    priority = 'OVERDUE';
+                } else if (daysDiff <= 7) {
+                    priority = 'HIGH';
+                }
+                
+                csvContent += `"${expense.biller}","${expense.description}",${expense.amount},"${expense.dueDate}","${priority}"\n`;
+            });
+            
+            csvContent += `"","Total",${table.totalAmount},"",""`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${table.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date(table.savedDate).toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function deleteSavedTable(tableId) {
+            const table = savedTables.find(t => t.id === tableId);
+            if (!table) return;
+            
+            if (confirm(`Are you sure you want to delete "${table.name}"? This action cannot be undone.`)) {
+                savedTables = savedTables.filter(t => t.id !== tableId);
+                updateHistoryView();
+                alert('Table deleted successfully.');
+            }
+        }
+
+        // Form submission for saving table
+        document.getElementById('saveForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const tableName = document.getElementById('tableName').value.trim();
+            const tableDescription = document.getElementById('tableDescription').value.trim();
+            
+            if (tableName) {
+                saveCurrentTable(tableName, tableDescription);
+            } else {
+                alert('Please enter a table name.');
+            }
+        });
+
+        // Form submission for expenses
         document.getElementById('expenseForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -775,9 +1146,13 @@
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modal = document.getElementById('expenseModal');
-            if (event.target === modal) {
+            const expenseModal = document.getElementById('expenseModal');
+            const saveModal = document.getElementById('saveModal');
+            if (event.target === expenseModal) {
                 closeModal();
+            }
+            if (event.target === saveModal) {
+                closeSaveModal();
             }
         }
 
