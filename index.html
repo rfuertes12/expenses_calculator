@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly Expenses Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .add-expense-btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .add-expense-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            right: 20px;
+            top: 15px;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="text"], input[type="number"], input[type="date"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            min-width: 80px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+            transform: translateY(-1px);
+        }
+
+        .btn-refresh {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-refresh:hover {
+            background: #138496;
+            transform: translateY(-1px);
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .table-actions {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-export {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #218838;
+            transform: translateY(-1px);
+        }
+
+        .btn-print {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-print:hover {
+            background: #e0a800;
+            transform: translateY(-1px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+            transform: scale(1.01);
+        }
+
+        .amount {
+            font-weight: 600;
+            color: #dc3545;
+        }
+
+        .priority-high {
+            background-color: #fff3cd !important;
+            border-left: 4px solid #ffc107;
+        }
+
+        .priority-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .due-date {
+            font-weight: 500;
+        }
+
+        .overdue {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .btn-calendar {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-calendar:hover {
+            background: #3367d6;
+            transform: translateY(-1px);
+        }
+
+        .total-row {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .total-row td {
+            border: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 20px;
+            }
+
+            .table-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                background: white;
+            }
+            
+            .add-expense-btn, .table-actions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Monthly Expenses Tracker</h1>
+        
+        <button class="add-expense-btn" onclick="openModal()">
+            ➕ Add New Expense
+        </button>
+
+        <div class="table-container">
+            <div class="table-actions">
+                <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
+                <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
+                <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
+                <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
+            </div>
+            
+            <div id="tableContent">
+                <div class="empty-state">
+                    <div class="empty-icon">📝</div>
+                    <h3>No expenses added yet</h3>
+                    <p>Click "Add New Expense" to get started</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="expenseModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Add New Expense</h2>
+            
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label for="biller">Biller Name:</label>
+                    <input type="text" id="biller" name="biller" required placeholder="e.g., Electric Company">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Bill Description:</label>
+                    <input type="text" id="description" name="description" required placeholder="e.g., Monthly Electric Bill">
+                </div>
+                
+                <div class="form-group">
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
+                </div>
+                
+                <div class="form-group">
+                    <label for="dueDate">Due Date:</label>
+                    <input type="date" id="dueDate" name="dueDate" required>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="button" class="btn btn-refresh" onclick="refreshForm()">Refresh</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let expenses = [];
+
+        function openModal() {
+            document.getElementById('expenseModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('expenseModal').style.display = 'none';
+            refreshForm();
+        }
+
+        function refreshForm() {
+            document.getElementById('expenseForm').reset();
+        }
+
+        function addExpense(biller, description, amount, dueDate) {
+            const expense = {
+                id: Date.now(),
+                biller: biller,
+                description: description,
+                amount: parseFloat(amount),
+                dueDate: dueDate
+            };
+            expenses.push(expense);
+            updateTable();
+        }
+
+        function updateTable() {
+            const tableContent = document.getElementById('tableContent');
+            
+            if (expenses.length === 0) {
+                tableContent.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">📝</div>
+                        <h3>No expenses added yet</h3>
+                        <p>Click "Add New Expense" to get started</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let tableHTML = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Biller</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Due Date</th>
+                            <th>Priority</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            expenses.forEach(expense => {
+                const dueDate = new Date(expense.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                let priorityBadge = '';
+                let rowClass = '';
+                let dueDateClass = 'due-date';
+                
+                if (daysDiff < 0) {
+                    priorityBadge = '<span class="priority-badge" style="background: #dc3545;">OVERDUE</span>';
+                    rowClass = 'priority-high';
+                    dueDateClass = 'due-date overdue';
+                } else if (daysDiff <= 7) {
+                    priorityBadge = '<span class="priority-badge">HIGH</span>';
+                    rowClass = 'priority-high';
+                }
+                
+                const formattedDate = new Date(expense.dueDate).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                tableHTML += `
+                    <tr class="${rowClass}">
+                        <td>${expense.biller}</td>
+                        <td>${expense.description}</td>
+                        <td class="amount">₱${expense.amount.toFixed(2)}</td>
+                        <td class="${dueDateClass}">${formattedDate}</td>
+                        <td>${priorityBadge}</td>
+                        <td>
+                            <button class="btn btn-calendar" style="padding: 4px 8px; font-size: 11px; margin-right: 5px;" onclick="addToCalendar(${expense.id})">📅</button>
+                            <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="removeExpense(${expense.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `
+                    </tbody>
+                    <tfoot>
+                        <tr class="total-row">
+                            <td colspan="3"><strong>Total Monthly Expenses</strong></td>
+                            <td colspan="3"><strong>₱${total.toFixed(2)}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+            
+            tableContent.innerHTML = tableHTML;
+        }
+
+        function removeExpense(id) {
+            expenses = expenses.filter(expense => expense.id !== id);
+            updateTable();
+        }
+
+        function refreshTable() {
+            if (confirm('Are you sure you want to clear all expenses? This action cannot be undone.')) {
+                expenses = [];
+                updateTable();
+            }
+        }
+
+        function exportToCSV() {
+            if (expenses.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+
+            let csvContent = "Biller,Description,Amount,Due Date,Priority\n";
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            expenses.forEach(expense => {
+                const dueDate = new Date(expense.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                
+                let priority = 'Normal';
+                if (daysDiff < 0) {
+                    priority = 'OVERDUE';
+                } else if (daysDiff <= 7) {
+                    priority = 'HIGH';
+                }
+                
+                csvContent += `"${expense.biller}","${expense.description}",${expense.amount},"${expense.dueDate}","${priority}"\n`;
+            });
+            
+            const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+            csvContent += `"","Total",${total},"",""`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `monthly-expenses-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        function printTable() {
+            window.print();
+        }
+
+        function addToCalendar(expenseId) {
+            const expense = expenses.find(e => e.id === expenseId);
+            if (!expense) return;
+
+            const title = `Pay ${expense.biller} - ${expense.description}`;
+            const details = `Amount: ₱${expense.amount.toFixed(2)}\nBiller: ${expense.biller}\nDescription: ${expense.description}`;
+            const startDate = new Date(expense.dueDate);
+            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour duration
+
+            const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${encodeURIComponent(details)}&location=&sf=true&output=xml`;
+            
+            window.open(googleCalendarUrl, '_blank');
+        }
+
+        function addAllToCalendar() {
+            if (expenses.length === 0) {
+                alert('No expenses to add to calendar!');
+                return;
+            }
+
+            if (confirm(`Add all ${expenses.length} expenses to Google Calendar?`)) {
+                expenses.forEach((expense, index) => {
+                    setTimeout(() => {
+                        addToCalendar(expense.id);
+                    }, index * 500); // Stagger the calendar opens by 500ms
+                });
+            }
+        }
+
+        function formatDateForGoogle(date) {
+            return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+        }
+
+        // Form submission
+        document.getElementById('expenseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const biller = document.getElementById('biller').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const amount = document.getElementById('amount').value;
+            const dueDate = document.getElementById('dueDate').value;
+            
+            if (biller && description && amount && dueDate && parseFloat(amount) > 0) {
+                addExpense(biller, description, amount, dueDate);
+                closeModal();
+            } else {
+                alert('Please fill in all fields with valid data.');
+            }
+        });
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('expenseModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
