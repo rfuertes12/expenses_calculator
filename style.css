@@ -417,6 +417,8 @@ tbody tr:hover {
 }
 
 .settled-row {
+    background-color: #f1f3f5 !important;
+    color: #6c757d !important;
     opacity: 0.6;
     text-decoration: line-through;
 }
