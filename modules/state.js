@@ -3,6 +3,7 @@ export class AppState {
         this.expenses = [];
         this.editingExpenseId = null;
         this.savedTables = [];
+        this.activeTableId = null;
         this.currentTab = 'current';
         this.githubConfig = {
             token: '',
