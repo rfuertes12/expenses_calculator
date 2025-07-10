@@ -1,4 +1,4 @@
-import { showAlert, closeAlert, showConfirm } from "./modules/alert.js";
+import { showAlert, closeAlert, showConfirm, showToast } from "./modules/alert.js";
 import { loadSavedData, saveDataToLocalStorage, loadGitHubConfig, saveGitHubConfig } from "./modules/storage.js";
 import { updateGitHubStatus, updateGitHubUI, logSync, connectGitHub, syncFromGitHub, autoSyncToGitHub, disconnectGitHub } from "./modules/github.js";
 import { downloadCSV } from "./modules/csv.js";
@@ -675,7 +675,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const dueDate = document.getElementById('dueDate').value;
         if (biller && description && amount && dueDate && parseFloat(amount) > 0) {
             addExpense(biller, description, amount, dueDate);
-            closeModal();
+            refreshForm();
+            showToast('Expense added to table!', 'success');
         } else {
             showAlert('Please fill in all fields with valid data.', 'warning');
         }
