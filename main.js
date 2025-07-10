@@ -178,9 +178,9 @@ function updateTable() {
                     <td data-label="Priority">${priorityBadge}</td>
                     <td data-label="Settled"><input type="checkbox" ${expense.settled ? 'checked' : ''} onchange="toggleSettled(${expense.id})"></td>
                     <td data-label="Action">
-                        <button class="btn btn-edit" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="editExpense(${expense.id})">✏️</button>
-                        <button class="btn btn-calendar" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="addToCalendar(${expense.id})">📅</button>
-                        <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="removeExpense(${expense.id})">🗑️</button>
+                        <button class="btn btn-edit icon-btn" title="Edit" onclick="editExpense(${expense.id})">✏️</button>
+                        <button class="btn btn-calendar icon-btn" title="Add to Calendar" onclick="addToCalendar(${expense.id})">📅</button>
+                        <button class="btn btn-secondary icon-btn" title="Remove" onclick="removeExpense(${expense.id})">🗑️</button>
                     </td>
                 </tr>
             `;
