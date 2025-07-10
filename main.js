@@ -1,54 +1,20 @@
-// Custom Alert System
-function showAlert(message, type = 'info', title = null, showCancel = false) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('alertModal');
-        const icon = document.getElementById('alertIcon');
-        const titleEl = document.getElementById('alertTitle');
-        const messageEl = document.getElementById('alertMessage');
-        const okBtn = document.getElementById('alertOkBtn');
-        const cancelBtn = document.getElementById('alertCancelBtn');
+import { showAlert, closeAlert, showConfirm } from "./modules/alert.js";
+import { loadSavedData, saveDataToLocalStorage, loadGitHubConfig, saveGitHubConfig } from "./modules/storage.js";
+import { updateGitHubStatus, updateGitHubUI, logSync, connectGitHub, syncFromGitHub, autoSyncToGitHub, disconnectGitHub } from "./modules/github.js";
 
-        // Set icon and title based on type
-        const config = {
-            success: { icon: '✅', title: title || 'Success', class: 'alert-success' },
-            error: { icon: '❌', title: title || 'Error', class: 'alert-error' },
-            warning: { icon: '⚠️', title: title || 'Warning', class: 'alert-warning' },
-            info: { icon: 'ℹ️', title: title || 'Information', class: 'alert-info' },
-            confirm: { icon: '❓', title: title || 'Confirm', class: 'alert-warning' }
-        };
 
-        const typeConfig = config[type] || config.info;
-        icon.textContent = typeConfig.icon;
-        icon.className = `alert-icon ${typeConfig.class}`;
-        titleEl.textContent = typeConfig.title;
-        messageEl.textContent = message;
 
-        // Show/hide cancel button
-        if (showCancel) {
-            cancelBtn.style.display = 'block';
-            okBtn.textContent = 'OK';
-        } else {
-            cancelBtn.style.display = 'none';
-            okBtn.textContent = 'OK';
-        }
-
-        // Set up callback
-        alertCallback = resolve;
-        modal.style.display = 'block';
-    });
+async function connectGitHubWrapper() {
+    githubConfig = await connectGitHub(githubConfig);
 }
 
-function closeAlert(result = false) {
-    document.getElementById('alertModal').style.display = 'none';
-    if (alertCallback) {
-        alertCallback(result);
-        alertCallback = null;
-    }
+async function syncFromGitHubWrapper() {
+    savedTables = await syncFromGitHub(githubConfig, savedTables);
+    updateHistoryView();
 }
 
-// Custom confirm function
-async function showConfirm(message, title = 'Confirm') {
-    return await showAlert(message, 'confirm', title, true);
+async function disconnectGitHubWrapper() {
+    githubConfig = await disconnectGitHub(githubConfig);
 }
 
 function switchTab(tabName) {
@@ -67,7 +33,7 @@ function switchTab(tabName) {
     if (tabName === 'history') {
         updateHistoryView();
     } else if (tabName === 'sync') {
-        updateGitHubStatus();
+        updateGitHubStatus(githubConfig);
     }
 }
 
@@ -388,11 +354,11 @@ function saveCurrentTable(name, description) {
     };
     
     savedTables.push(savedTable);
-    saveDataToLocalStorage(); // Save to localStorage first
+    saveDataToLocalStorage(savedTables); // Save to localStorage first
     
     // Auto-sync to GitHub if connected
     if (githubConfig.connected) {
-        autoSyncToGitHub();
+        autoSyncToGitHub(githubConfig, savedTables);
     }
     
     updateHistoryView();
@@ -644,342 +610,17 @@ async function deleteSavedTable(tableId) {
     const confirmed = await showConfirm(`Are you sure you want to delete "${table.name}"? This action cannot be undone.`, 'Delete Table');
     if (confirmed) {
         savedTables = savedTables.filter(t => t.id !== tableId);
-        saveDataToLocalStorage(); // Update localStorage
+        saveDataToLocalStorage(savedTables); // Update localStorage
         
         // Auto-sync deletion to GitHub if connected
         if (githubConfig.connected) {
-            autoSyncToGitHub();
+            autoSyncToGitHub(githubConfig, savedTables);
         }
         
         updateHistoryView();
         showAlert('Table deleted successfully.', 'success');
     }
 }
-
-// Auto-sync function (silent background sync)
-async function autoSyncToGitHub() {
-    if (!githubConfig.connected) return;
-    
-    try {
-        const dataToSync = {
-            savedTables: savedTables,
-            lastSync: new Date().toISOString(),
-            version: '1.0'
-        };
-
-        const encodedData = btoa(JSON.stringify(dataToSync));
-        
-        const content = {
-            message: `Auto-sync expense data - ${new Date().toLocaleDateString()}`,
-            content: encodedData
-        };
-
-        // Check if file exists to get SHA
-        let sha = null;
-        try {
-            const fileResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
-                headers: {
-                    'Authorization': `token ${githubConfig.token}`,
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-
-            if (fileResponse.ok) {
-                const fileData = await fileResponse.json();
-                sha = fileData.sha;
-                content.sha = sha;
-            }
-        } catch (e) {
-            // File doesn't exist, will create new
-        }
-
-        const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
-            method: 'PUT',
-            headers: {
-                'Authorization': `token ${githubConfig.token}`,
-                'Accept': 'application/vnd.github.v3+json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(content)
-        });
-
-        if (!response.ok) {
-            throw new Error('Auto-sync failed');
-        }
-
-        // Silent success - no user notification for auto-sync
-        console.log('Auto-synced to GitHub successfully');
-
-    } catch (error) {
-        console.log('Auto-sync error:', error.message);
-        // Don't show error alerts for auto-sync failures
-    }
-}
-
-// GitHub Sync Functions
-function updateGitHubStatus() {
-    const statusIndicator = document.getElementById('githubStatus');
-    const statusText = document.getElementById('githubStatusText');
-    const syncDownBtn = document.getElementById('syncDownBtn');
-    const disconnectBtn = document.getElementById('disconnectBtn');
-
-    if (githubConfig.connected) {
-        statusIndicator.className = 'status-indicator status-connected';
-        statusText.textContent = `Connected to ${githubConfig.owner}/${githubConfig.repo} (Auto-sync enabled)`;
-        syncDownBtn.disabled = false;
-        disconnectBtn.disabled = false;
-    } else {
-        statusIndicator.className = 'status-indicator status-disconnected';
-        statusText.textContent = 'Not connected - Tables saved locally only';
-        syncDownBtn.disabled = true;
-        disconnectBtn.disabled = true;
-    }
-}
-
-function updateGitHubUI() {
-    if (githubConfig.connected) {
-        document.getElementById('githubToken').value = '••••••••••••••••';
-        document.getElementById('githubRepo').value = githubConfig.repo;
-    }
-}
-
-function logSync(message) {
-    const logDiv = document.getElementById('syncLog');
-    const logContent = document.getElementById('syncLogContent');
-    const timestamp = new Date().toLocaleTimeString();
-    
-    logDiv.style.display = 'block';
-    logContent.innerHTML += `[${timestamp}] ${message}\n`;
-    logContent.scrollTop = logContent.scrollHeight;
-}
-
-async function connectGitHub() {
-    const token = document.getElementById('githubToken').value.trim();
-    const repo = document.getElementById('githubRepo').value.trim();
-
-    if (!token || !repo) {
-        showAlert('Please enter both GitHub token and repository name.', 'warning');
-        return;
-    }
-
-    try {
-        logSync('🔗 Connecting to GitHub...');
-        
-        // Test the token by getting user info
-        const userResponse = await fetch('https://api.github.com/user', {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        if (!userResponse.ok) {
-            throw new Error('Invalid GitHub token');
-        }
-
-        const userData = await userResponse.json();
-        logSync(`✅ Authenticated as ${userData.login}`);
-
-        // Check if repo exists, create if it doesn't
-        const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${repo}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        if (!repoResponse.ok && repoResponse.status === 404) {
-            // Create the repository
-            logSync('📁 Creating repository...');
-            const createResponse = await fetch('https://api.github.com/user/repos', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    name: repo,
-                    description: 'Expense Tracker Data Storage',
-                    private: true
-                })
-            });
-
-            if (!createResponse.ok) {
-                throw new Error('Failed to create repository');
-            }
-            logSync('✅ Repository created successfully');
-        }
-
-        githubConfig = {
-            token: token,
-            repo: repo,
-            owner: userData.login,
-            connected: true
-        };
-
-        saveGitHubConfig();
-        updateGitHubStatus();
-        updateGitHubUI();
-        logSync('🎉 GitHub connection successful!');
-        showAlert('GitHub connected successfully! Tables will now auto-sync to the cloud.', 'success');
-
-    } catch (error) {
-        logSync(`❌ Error: ${error.message}`);
-        showAlert(`Failed to connect to GitHub: ${error.message}`, 'error');
-    }
-}
-
-async function syncFromGitHub() {
-    if (!githubConfig.connected) {
-        showAlert('Please connect to GitHub first.', 'warning');
-        return;
-    }
-
-    try {
-        logSync('⬇️ Syncing data from GitHub...');
-
-        const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
-            headers: {
-                'Authorization': `token ${githubConfig.token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) {
-                logSync('📄 No data found on GitHub');
-                showAlert('No expense data found on GitHub. Save some tables first to create cloud backup.', 'info');
-                return;
-            }
-            throw new Error('Failed to fetch data from GitHub');
-        }
-
-        const fileData = await response.json();
-        const decodedData = JSON.parse(atob(fileData.content));
-
-        if (decodedData.savedTables) {
-            const mergeData = await showConfirm('Do you want to merge with existing data? Click Cancel to replace all local data.', 'Sync Options');
-            
-            if (mergeData) {
-                // Merge data (avoid duplicates based on ID)
-                const existingIds = savedTables.map(table => table.id);
-                const newTables = decodedData.savedTables.filter(table => !existingIds.includes(table.id));
-                savedTables = [...savedTables, ...newTables];
-            } else {
-                // Replace all data
-                savedTables = decodedData.savedTables;
-            }
-
-            saveDataToLocalStorage();
-            updateHistoryView();
-            logSync('✅ Data synced successfully from GitHub');
-            showAlert('Data synced from GitHub successfully!', 'success');
-        } else {
-            throw new Error('Invalid data format');
-        }
-
-    } catch (error) {
-        logSync(`❌ Sync error: ${error.message}`);
-        showAlert(`Failed to sync from GitHub: ${error.message}`, 'error');
-    }
-}
-
-async function disconnectGitHub() {
-    const confirmed = await showConfirm('Are you sure you want to disconnect from GitHub? This will not delete your cloud data.', 'Disconnect GitHub');
-    if (confirmed) {
-        githubConfig = {
-            token: '',
-            repo: '',
-            owner: '',
-            connected: false
-        };
-        
-        saveGitHubConfig();
-        updateGitHubStatus();
-        
-        document.getElementById('githubToken').value = '';
-        document.getElementById('githubRepo').value = '';
-        
-        logSync('🔌 Disconnected from GitHub');
-        showAlert('Disconnected from GitHub successfully.', 'success');
-    }
-}
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', function() {
-    // Form submission for saving table
-    document.getElementById('saveForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const tableName = document.getElementById('tableName').value.trim();
-        const tableDescription = document.getElementById('tableDescription').value.trim();
-        
-        if (tableName) {
-            saveCurrentTable(tableName, tableDescription);
-        } else {
-            showAlert('Please enter a table name.', 'warning');
-        }
-    });
-
-    // Form submission for expenses
-    document.getElementById('expenseForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const biller = document.getElementById('biller').value.trim();
-        const description = document.getElementById('description').value.trim();
-        const amount = document.getElementById('amount').value;
-        const dueDate = document.getElementById('dueDate').value;
-        
-        if (biller && description && amount && dueDate && parseFloat(amount) > 0) {
-            addExpense(biller, description, amount, dueDate);
-            closeModal();
-        } else {
-            showAlert('Please fill in all fields with valid data.', 'warning');
-        }
-    });
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        const expenseModal = document.getElementById('expenseModal');
-        const saveModal = document.getElementById('saveModal');
-        const alertModal = document.getElementById('alertModal');
-        
-        if (event.target === expenseModal) {
-            closeModal();
-        }
-        if (event.target === saveModal) {
-            closeSaveModal();
-        }
-        if (event.target === alertModal) {
-            closeAlert();
-        }
-    }
-
-    // Update alert modal button handlers
-    document.getElementById('alertCancelBtn').onclick = function() {
-        closeAlert(false);
-    };
-    
-    document.getElementById('alertOkBtn').onclick = function() {
-        closeAlert(true);
-    };
-
-    // Keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            if (editingExpenseId) {
-                cancelEdit();
-            } else {
-                closeModal();
-            }
-        }
-        // Save edit with Ctrl+Enter or Cmd+Enter
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && editingExpenseId) {
-            saveEdit(editingExpenseId);
-        }
-    });
-});
 
 // Initialize the app when page loads
 window.addEventListener('load', initializeApp);// Global variables
@@ -993,70 +634,102 @@ let githubConfig = {
     owner: '',
     connected: false
 };
-let alertCallback = null;
 
 // Initialize data on page load
 function initializeApp() {
-    loadSavedData();
-    loadGitHubConfig();
+    savedTables = loadSavedData(savedTables);
+    githubConfig = loadGitHubConfig();
     updateTable();
     updateHistoryView();
-    updateGitHubStatus();
+    updateGitHubStatus(githubConfig);
+    updateGitHubUI(githubConfig);
+
 }
 
-// Load saved data from localStorage
-function loadSavedData() {
-    try {
-        const savedData = localStorage.getItem('expenseTrackerHistory');
-        if (savedData) {
-            const parsedData = JSON.parse(savedData);
-            // Filter out data older than 150 days (extended from 90)
-            const retentionDays = 150;
-            const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - retentionDays);
-            
-            savedTables = parsedData.filter(table => {
-                const savedDate = new Date(table.savedDate);
-                return savedDate >= cutoffDate;
-            });
-            
-            // Update localStorage with filtered data
-            saveDataToLocalStorage();
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('saveForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const tableName = document.getElementById('tableName').value.trim();
+        const tableDescription = document.getElementById('tableDescription').value.trim();
+        if (tableName) {
+            saveCurrentTable(tableName, tableDescription);
+        } else {
+            showAlert('Please enter a table name.', 'warning');
         }
-    } catch (error) {
-        console.log('Error loading saved data:', error);
-        savedTables = [];
-    }
-}
+    });
 
-// Save data to localStorage
-function saveDataToLocalStorage() {
-    try {
-        localStorage.setItem('expenseTrackerHistory', JSON.stringify(savedTables));
-    } catch (error) {
-        console.log('Error saving data:', error);
-        showAlert('Warning: Could not save history data. Storage may be full.', 'warning');
-    }
-}
-
-// Load GitHub configuration
-function loadGitHubConfig() {
-    try {
-        const config = localStorage.getItem('expenseTrackerGitHubConfig');
-        if (config) {
-            githubConfig = JSON.parse(config);
-            updateGitHubUI();
+    document.getElementById('expenseForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const biller = document.getElementById('biller').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const amount = document.getElementById('amount').value;
+        const dueDate = document.getElementById('dueDate').value;
+        if (biller && description && amount && dueDate && parseFloat(amount) > 0) {
+            addExpense(biller, description, amount, dueDate);
+            closeModal();
+        } else {
+            showAlert('Please fill in all fields with valid data.', 'warning');
         }
-    } catch (error) {
-        console.log('Error loading GitHub config:', error);
-    }
-}
+    });
 
-// Save GitHub configuration
-function saveGitHubConfig() {
-    try {
-        localStorage.setItem('expenseTrackerGitHubConfig', JSON.stringify(githubConfig));
-    } catch (error) {
-        console.log('Error saving GitHub config:', error);
-    }
-}
+    window.onclick = function(event) {
+        const expenseModal = document.getElementById('expenseModal');
+        const saveModal = document.getElementById('saveModal');
+        const alertModal = document.getElementById('alertModal');
+        if (event.target === expenseModal) {
+            closeModal();
+        }
+        if (event.target === saveModal) {
+            closeSaveModal();
+        }
+        if (event.target === alertModal) {
+            closeAlert();
+        }
+    };
+
+    document.getElementById('alertCancelBtn').onclick = function() {
+        closeAlert(false);
+    };
+    document.getElementById('alertOkBtn').onclick = function() {
+        closeAlert(true);
+    };
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (editingExpenseId) {
+                cancelEdit();
+            } else {
+                closeModal();
+            }
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && editingExpenseId) {
+            saveEdit(editingExpenseId);
+        }
+    });
+});
+
+Object.assign(window, {
+    switchTab,
+    openModal,
+    closeModal,
+    refreshForm,
+    openSaveModal,
+    closeSaveModal,
+    exportToCSV,
+    addAllToCalendar,
+    refreshTable,
+    printTable,
+    connectGitHub: connectGitHubWrapper,
+    syncFromGitHub: syncFromGitHubWrapper,
+    disconnectGitHub: disconnectGitHubWrapper,
+    closeAlert,
+    editExpense,
+    saveEdit,
+    cancelEdit,
+    removeExpense,
+    addToCalendar,
+    viewSavedTable,
+    restoreTable,
+    exportSavedTable,
+    deleteSavedTable
+});
