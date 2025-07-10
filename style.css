@@ -164,6 +164,54 @@ h1 {
     box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
 }
 
+.current-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 5;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.current-header .add-expense-btn {
+    margin-bottom: 0;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.expense-summaries {
+    display: flex;
+    gap: 10px;
+}
+
+.summary-box {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 120px;
+}
+
+.summary-label {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 4px;
+}
+
+.summary-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+}
+
 .add-expense-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
@@ -293,7 +341,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
     overflow-x: auto;
     overflow-y: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    margin-top: 20px;
+    margin-top: 0;
 }
 
 .table-actions {
@@ -666,7 +714,7 @@ tbody tr:hover {
         background: white;
     }
     
-    .add-expense-btn, .table-actions {
+    .add-expense-btn, .table-actions, .expense-summaries {
         display: none;
     }
 }
