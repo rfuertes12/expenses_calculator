@@ -20,7 +20,7 @@
             <section id="current-tab" class="tab-content active">
                 <div class="current-header">
                     <div class="top-bar">
-                        <button class="add-expense-btn" onclick="openModal()">➕ Add New Expense</button>
+                        <button class="add-expense-btn icon-btn" onclick="openModal()" title="Add New Expense">➕</button>
                         <div class="expense-summaries">
                             <div class="summary-box">
                                 <div class="summary-label">Total Monthly Expenses</div>
@@ -33,11 +33,11 @@
                         </div>
                     </div>
                     <div class="table-actions">
-                        <button class="btn btn-save-table" onclick="openSaveModal()">💾 Save Table</button>
-                        <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
-                        <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
-                        <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
-                        <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
+                        <button class="btn btn-save-table icon-btn" onclick="openSaveModal()" title="Save Table">💾</button>
+                        <button class="btn btn-export icon-btn" onclick="exportToCSV()" title="Export CSV">📊</button>
+                        <button class="btn btn-calendar icon-btn" onclick="addAllToCalendar()" title="Add to Google Calendar">📅</button>
+                        <button class="btn btn-refresh icon-btn" onclick="refreshTable()" title="Refresh Table">🔄</button>
+                        <button class="btn btn-print icon-btn" onclick="printTable()" title="Print">🖨️</button>
                     </div>
                 </div>
                 <div class="table-container">
