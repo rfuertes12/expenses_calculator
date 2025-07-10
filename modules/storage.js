@@ -9,6 +9,12 @@ export function loadSavedData(savedTables) {
             const filtered = parsedData.filter(table => {
                 const savedDate = new Date(table.savedDate);
                 return savedDate >= cutoffDate;
+            }).map(table => {
+                table.expenses = table.expenses.map(exp => ({
+                    ...exp,
+                    settled: exp.settled || false
+                }));
+                return table;
             });
             localStorage.setItem('expenseTrackerHistory', JSON.stringify(filtered));
             return filtered;

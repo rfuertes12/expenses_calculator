@@ -416,6 +416,18 @@ tbody tr:hover {
     border: 2px solid #2196f3 !important;
 }
 
+.settled-row {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+.settled-total-row {
+    background: linear-gradient(45deg, #6c757d, #adb5bd);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+}
+
 .total-row {
     background: linear-gradient(45deg, #28a745, #20c997);
     color: white;
@@ -424,6 +436,10 @@ tbody tr:hover {
 }
 
 .total-row td {
+    border: none;
+}
+
+.settled-total-row td {
     border: none;
 }
 
