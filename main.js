@@ -656,6 +656,14 @@ function initializeApp() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    function updateHeaderHeight() {
+        const header = document.querySelector('header');
+        if (header) {
+            document.documentElement.style.setProperty('--header-height', `${header.offsetHeight}px`);
+        }
+    }
+    updateHeaderHeight();
+    window.addEventListener('resize', updateHeaderHeight);
     document.getElementById('saveForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const tableName = document.getElementById('tableName').value.trim();

@@ -21,6 +21,7 @@
     --btn-github-hover-bg: #1a1e22;
     --btn-danger-bg: #dc3545;
     --btn-danger-hover-bg: #c82333;
+    --header-height: 0px;
 }
 
 body {
@@ -38,6 +39,13 @@ body {
     padding: 30px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
+}
+
+header {
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    z-index: 10;
 }
 
 .tabs {
@@ -166,7 +174,7 @@ h1 {
 
 .current-header {
     position: sticky;
-    top: 0;
+    top: var(--header-height);
     background: white;
     z-index: 5;
     padding-bottom: 10px;
