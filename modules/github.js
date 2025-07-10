@@ -1,6 +1,23 @@
 import { showAlert, showConfirm } from './alert.js';
 import { saveDataToLocalStorage, saveGitHubConfig } from './storage.js';
 
+async function safeFetch(url, options) {
+    try {
+        const response = await fetch(url, options);
+        if (!response.ok) {
+            let message = `HTTP ${response.status}`;
+            try {
+                const data = await response.json();
+                if (data.message) message = data.message;
+            } catch (_) { /* ignore */ }
+            throw new Error(message);
+        }
+        return response;
+    } catch (error) {
+        throw new Error(error.message || 'Network error');
+    }
+}
+
 export function updateGitHubStatus(githubConfig) {
     const statusIndicator = document.getElementById('githubStatus');
     const statusText = document.getElementById('githubStatusText');
@@ -49,30 +66,35 @@ export async function connectGitHub(githubConfig) {
     try {
         logSync('🔗 Connecting to GitHub...');
 
-        const userResponse = await fetch('https://api.github.com/user', {
+        const userResponse = await safeFetch('https://api.github.com/user', {
             headers: {
                 'Authorization': `token ${token}`,
                 'Accept': 'application/vnd.github.v3+json'
             }
         });
 
-        if (!userResponse.ok) {
+        if (!userResponse) {
             throw new Error('Invalid GitHub token');
         }
 
         const userData = await userResponse.json();
         logSync(`✅ Authenticated as ${userData.login}`);
 
-        const repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${repo}`, {
-            headers: {
-                'Authorization': `token ${token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        let repoResponse;
+        try {
+            repoResponse = await fetch(`https://api.github.com/repos/${userData.login}/${repo}`, {
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+        } catch (err) {
+            throw new Error('Network error');
+        }
 
         if (!repoResponse.ok && repoResponse.status === 404) {
             logSync('📁 Creating repository...');
-            const createResponse = await fetch('https://api.github.com/user/repos', {
+            const createResponse = await safeFetch('https://api.github.com/user/repos', {
                 method: 'POST',
                 headers: {
                     'Authorization': `token ${token}`,
@@ -85,7 +107,7 @@ export async function connectGitHub(githubConfig) {
                     private: true
                 })
             });
-            if (!createResponse.ok) {
+            if (!createResponse) {
                 throw new Error('Failed to create repository');
             }
             logSync('✅ Repository created successfully');
@@ -121,12 +143,17 @@ export async function syncFromGitHub(githubConfig, savedTables) {
     try {
         logSync('⬇️ Syncing data from GitHub...');
 
-        const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
-            headers: {
-                'Authorization': `token ${githubConfig.token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        let response;
+        try {
+            response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+        } catch (err) {
+            throw new Error('Network error');
+        }
 
         if (!response.ok) {
             if (response.status === 404) {
@@ -188,12 +215,17 @@ export async function disconnectGitHub(githubConfig) {
 export async function autoSyncToGitHub(githubConfig, savedTables) {
     if (!githubConfig.connected) return;
     try {
-        const fileResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
-            headers: {
-                'Authorization': `token ${githubConfig.token}`,
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        });
+        let fileResponse;
+        try {
+            fileResponse = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+        } catch (err) {
+            throw new Error('Network error');
+        }
 
         let sha = '';
         if (fileResponse.ok) {
@@ -201,7 +233,7 @@ export async function autoSyncToGitHub(githubConfig, savedTables) {
             sha = fileData.sha;
         }
 
-        const response = await fetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
+        await safeFetch(`https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/contents/expense-data.json`, {
             method: 'PUT',
             headers: {
                 'Authorization': `token ${githubConfig.token}`,
@@ -214,9 +246,6 @@ export async function autoSyncToGitHub(githubConfig, savedTables) {
             })
         });
 
-        if (!response.ok) {
-            throw new Error('Failed to sync to GitHub');
-        }
         logSync('✅ Auto-synced to GitHub successfully');
     } catch (error) {
         logSync(`❌ Auto-sync error: ${error.message}`);

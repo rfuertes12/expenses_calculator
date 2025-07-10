@@ -1,20 +1,22 @@
 import { showAlert, closeAlert, showConfirm } from "./modules/alert.js";
 import { loadSavedData, saveDataToLocalStorage, loadGitHubConfig, saveGitHubConfig } from "./modules/storage.js";
 import { updateGitHubStatus, updateGitHubUI, logSync, connectGitHub, syncFromGitHub, autoSyncToGitHub, disconnectGitHub } from "./modules/github.js";
+import { downloadCSV } from "./modules/csv.js";
+import { state } from "./modules/state.js";
 
 
 
 async function connectGitHubWrapper() {
-    githubConfig = await connectGitHub(githubConfig);
+    state.githubConfig = await connectGitHub(state.githubConfig);
 }
 
 async function syncFromGitHubWrapper() {
-    savedTables = await syncFromGitHub(githubConfig, savedTables);
+    state.savedTables = await syncFromGitHub(state.githubConfig, state.savedTables);
     updateHistoryView();
 }
 
 async function disconnectGitHubWrapper() {
-    githubConfig = await disconnectGitHub(githubConfig);
+    state.githubConfig = await disconnectGitHub(state.githubConfig);
 }
 
 function switchTab(tabName) {
@@ -28,17 +30,17 @@ function switchTab(tabName) {
     document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
     document.getElementById(`${tabName}-tab`).classList.add('active');
     
-    currentTab = tabName;
+    state.currentTab = tabName;
     
     if (tabName === 'history') {
         updateHistoryView();
     } else if (tabName === 'sync') {
-        updateGitHubStatus(githubConfig);
+        updateGitHubStatus(state.githubConfig);
     }
 }
 
 function openModal() {
-    if (editingExpenseId) {
+    if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before adding a new expense.', 'warning');
         return;
     }
@@ -62,14 +64,14 @@ function addExpense(biller, description, amount, dueDate) {
         amount: parseFloat(amount),
         dueDate: dueDate
     };
-    expenses.push(expense);
+    state.expenses.push(expense);
     updateTable();
 }
 
 function updateTable() {
     const tableContent = document.getElementById('tableContent');
-    
-    if (expenses.length === 0) {
+
+    if (state.expenses.length === 0) {
         tableContent.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">📝</div>
@@ -81,11 +83,11 @@ function updateTable() {
     }
 
     // Sort expenses by due date (earliest first)
-    const sortedExpenses = [...expenses].sort((a, b) => {
+    const sortedExpenses = [...state.expenses].sort((a, b) => {
         return new Date(a.dueDate) - new Date(b.dueDate);
     });
 
-    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const total = state.expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -128,7 +130,7 @@ function updateTable() {
             day: 'numeric'
         });
         
-        const isEditing = editingExpenseId === expense.id;
+        const isEditing = state.editingExpenseId === expense.id;
         if (isEditing) {
             rowClass += ' editing-row';
         }
@@ -180,23 +182,23 @@ function updateTable() {
 }
 
 async function removeExpense(id) {
-    if (editingExpenseId) {
+    if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before deleting.', 'warning');
         return;
     }
     const confirmed = await showConfirm('Are you sure you want to delete this expense?', 'Delete Expense');
     if (confirmed) {
-        expenses = expenses.filter(expense => expense.id !== id);
+        state.expenses = state.expenses.filter(expense => expense.id !== id);
         updateTable();
     }
 }
 
 function editExpense(id) {
-    if (editingExpenseId && editingExpenseId !== id) {
+    if (state.editingExpenseId && state.editingExpenseId !== id) {
         showAlert('Please save or cancel the current edit before editing another expense.', 'warning');
         return;
     }
-    editingExpenseId = id;
+    state.editingExpenseId = id;
     updateTable();
 }
 
@@ -211,10 +213,10 @@ function saveEdit(id) {
         return;
     }
 
-    const expenseIndex = expenses.findIndex(expense => expense.id === id);
+    const expenseIndex = state.expenses.findIndex(expense => expense.id === id);
     if (expenseIndex !== -1) {
-        expenses[expenseIndex] = {
-            ...expenses[expenseIndex],
+        state.expenses[expenseIndex] = {
+            ...state.expenses[expenseIndex],
             biller: biller,
             description: description,
             amount: amount,
@@ -222,70 +224,35 @@ function saveEdit(id) {
         };
     }
 
-    editingExpenseId = null;
+    state.editingExpenseId = null;
     updateTable();
 }
 
 function cancelEdit() {
-    editingExpenseId = null;
+    state.editingExpenseId = null;
     updateTable();
 }
 
 async function refreshTable() {
-    if (editingExpenseId) {
+    if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before refreshing.', 'warning');
         return;
     }
     const confirmed = await showConfirm('Are you sure you want to clear all expenses? This action cannot be undone.', 'Clear All Expenses');
     if (confirmed) {
-        expenses = [];
-        editingExpenseId = null;
+        state.expenses = [];
+        state.editingExpenseId = null;
         updateTable();
     }
 }
 
 function exportToCSV() {
-    if (expenses.length === 0) {
+    if (state.expenses.length === 0) {
         showAlert('No data to export!', 'warning');
         return;
     }
 
-    // Sort expenses by due date for export too
-    const sortedExpenses = [...expenses].sort((a, b) => {
-        return new Date(a.dueDate) - new Date(b.dueDate);
-    });
-
-    let csvContent = "Biller,Description,Amount,Due Date,Priority\n";
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    sortedExpenses.forEach(expense => {
-        const dueDate = new Date(expense.dueDate);
-        dueDate.setHours(0, 0, 0, 0);
-        const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-        
-        let priority = 'Normal';
-        if (daysDiff < 0) {
-            priority = 'OVERDUE';
-        } else if (daysDiff <= 10) {
-            priority = 'HIGH';
-        }
-        
-        csvContent += `"${expense.biller}","${expense.description}",${expense.amount},"${expense.dueDate}","${priority}"\n`;
-    });
-    
-    const total = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    csvContent += `"","Total",${total},"",""`;
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `monthly-expenses-${new Date().toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    downloadCSV(state.expenses, `monthly-expenses-${new Date().toISOString().split('T')[0]}.csv`);
 }
 
 function printTable() {
@@ -293,7 +260,7 @@ function printTable() {
 }
 
 function addToCalendar(expenseId) {
-    const expense = expenses.find(e => e.id === expenseId);
+    const expense = state.expenses.find(e => e.id === expenseId);
     if (!expense) return;
 
     const title = `Pay ${expense.biller} - ${expense.description}`;
@@ -307,14 +274,14 @@ function addToCalendar(expenseId) {
 }
 
 async function addAllToCalendar() {
-    if (expenses.length === 0) {
+    if (state.expenses.length === 0) {
         showAlert('No expenses to add to calendar!', 'warning');
         return;
     }
 
-    const confirmed = await showConfirm(`Add all ${expenses.length} expenses to Google Calendar?`, 'Add to Calendar');
+    const confirmed = await showConfirm(`Add all ${state.expenses.length} expenses to Google Calendar?`, 'Add to Calendar');
     if (confirmed) {
-        expenses.forEach((expense, index) => {
+        state.expenses.forEach((expense, index) => {
             setTimeout(() => {
                 addToCalendar(expense.id);
             }, index * 500); // Stagger the calendar opens by 500ms
@@ -327,11 +294,11 @@ function formatDateForGoogle(date) {
 }
 
 function openSaveModal() {
-    if (expenses.length === 0) {
+    if (state.expenses.length === 0) {
         showAlert('No expenses to save! Add some expenses first.', 'warning');
         return;
     }
-    if (editingExpenseId) {
+    if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before saving the table.', 'warning');
         return;
     }
@@ -348,49 +315,49 @@ function saveCurrentTable(name, description) {
         id: Date.now(),
         name: name,
         description: description || '',
-        expenses: JSON.parse(JSON.stringify(expenses)), // Deep copy
+        expenses: JSON.parse(JSON.stringify(state.expenses)), // Deep copy
         savedDate: new Date().toISOString(),
-        totalAmount: expenses.reduce((sum, expense) => sum + expense.amount, 0)
+        totalAmount: state.expenses.reduce((sum, expense) => sum + expense.amount, 0)
     };
-    
-    savedTables.push(savedTable);
-    saveDataToLocalStorage(savedTables); // Save to localStorage first
-    
+
+    state.savedTables.push(savedTable);
+    saveDataToLocalStorage(state.savedTables); // Save to localStorage first
+
     // Auto-sync to GitHub if connected
-    if (githubConfig.connected) {
-        autoSyncToGitHub(githubConfig, savedTables);
+    if (state.githubConfig.connected) {
+        autoSyncToGitHub(state.githubConfig, state.savedTables);
     }
-    
+
     updateHistoryView();
     closeSaveModal();
     
     // Show success message
-    const syncStatus = githubConfig.connected ? " and synced to GitHub" : "";
+    const syncStatus = state.githubConfig.connected ? " and synced to GitHub" : "";
     showAlert(`Table "${name}" saved to History${syncStatus}! (Kept for 150 days)`, 'success');
 }
 
 function updateHistoryView() {
     const historyContent = document.getElementById('historyContent');
     
-    if (savedTables.length === 0) {
+    if (state.savedTables.length === 0) {
         historyContent.innerHTML = `
             <div class="empty-history">
                 <div class="empty-icon">📚</div>
                 <h3>No saved tables yet</h3>
                 <p>Save your current bill table to start building your history</p>
-                <p style="font-size: 14px; color: #6c757d; margin-top: 10px;">💾 Tables are automatically saved for 150 days${githubConfig.connected ? ' + synced to GitHub' : ''}</p>
+                <p style="font-size: 14px; color: #6c757d; margin-top: 10px;">💾 Tables are automatically saved for 150 days${state.githubConfig.connected ? ' + synced to GitHub' : ''}</p>
             </div>
         `;
         return;
     }
     
     // Sort saved tables by date (newest first)
-    const sortedTables = [...savedTables].sort((a, b) => new Date(b.savedDate) - new Date(a.savedDate));
+    const sortedTables = [...state.savedTables].sort((a, b) => new Date(b.savedDate) - new Date(a.savedDate));
     
-    const syncStatus = githubConfig.connected ? ' + Auto-synced to GitHub ☁️' : ' (Connect GitHub for cloud backup)';
+    const syncStatus = state.githubConfig.connected ? ' + Auto-synced to GitHub ☁️' : ' (Connect GitHub for cloud backup)';
     let historyHTML = `
         <div style="text-align: center; margin-bottom: 20px; padding: 10px; background: #e3f2fd; border-radius: 8px; color: #1976d2;">
-            💾 <strong>${savedTables.length}</strong> table(s) saved for 150 days${syncStatus}
+            💾 <strong>${state.savedTables.length}</strong> table(s) saved for 150 days${syncStatus}
         </div>
     `;
     
@@ -462,7 +429,7 @@ function updateHistoryView() {
 }
 
 function viewSavedTable(tableId) {
-    const table = savedTables.find(t => t.id === tableId);
+    const table = state.savedTables.find(t => t.id === tableId);
     if (!table) return;
     
     // Create a temporary view modal
@@ -546,75 +513,48 @@ function viewSavedTable(tableId) {
 }
 
 async function restoreTable(tableId) {
-    if (editingExpenseId) {
+    if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before restoring a table.', 'warning');
         return;
     }
-    
-    const table = savedTables.find(t => t.id === tableId);
+
+    const table = state.savedTables.find(t => t.id === tableId);
     if (!table) return;
-    
-    if (expenses.length > 0) {
+
+    if (state.expenses.length > 0) {
         const confirmed = await showConfirm('This will replace your current expenses. Continue?', 'Restore Table');
         if (!confirmed) return;
     }
-    
-    expenses = JSON.parse(JSON.stringify(table.expenses)); // Deep copy
+
+    state.expenses = JSON.parse(JSON.stringify(table.expenses)); // Deep copy
     switchTab('current');
     updateTable();
     showAlert(`Table "${table.name}" restored successfully!`, 'success');
 }
 
 function exportSavedTable(tableId) {
-    const table = savedTables.find(t => t.id === tableId);
+    const table = state.savedTables.find(t => t.id === tableId);
     if (!table) return;
-    
-    const sortedExpenses = [...table.expenses].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let csvContent = "Biller,Description,Amount,Due Date,Priority\n";
-    
-    sortedExpenses.forEach(expense => {
-        const dueDate = new Date(expense.dueDate);
-        dueDate.setHours(0, 0, 0, 0);
-        const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-        
-        let priority = 'Normal';
-        if (daysDiff < 0) {
-            priority = 'OVERDUE';
-        } else if (daysDiff <= 7) {
-            priority = 'HIGH';
-        }
-        
-        csvContent += `"${expense.biller}","${expense.description}",${expense.amount},"${expense.dueDate}","${priority}"\n`;
-    });
-    
-    csvContent += `"","Total",${table.totalAmount},"",""`;
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${table.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date(table.savedDate).toISOString().split('T')[0]}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    downloadCSV(
+        table.expenses,
+        `${table.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}-${new Date(table.savedDate).toISOString().split('T')[0]}.csv`,
+        7
+    );
 }
 
 async function deleteSavedTable(tableId) {
-    const table = savedTables.find(t => t.id === tableId);
+    const table = state.savedTables.find(t => t.id === tableId);
     if (!table) return;
     
     const confirmed = await showConfirm(`Are you sure you want to delete "${table.name}"? This action cannot be undone.`, 'Delete Table');
     if (confirmed) {
-        savedTables = savedTables.filter(t => t.id !== tableId);
-        saveDataToLocalStorage(savedTables); // Update localStorage
+        state.savedTables = state.savedTables.filter(t => t.id !== tableId);
+        saveDataToLocalStorage(state.savedTables); // Update localStorage
         
         // Auto-sync deletion to GitHub if connected
-        if (githubConfig.connected) {
-            autoSyncToGitHub(githubConfig, savedTables);
+        if (state.githubConfig.connected) {
+            autoSyncToGitHub(state.githubConfig, state.savedTables);
         }
         
         updateHistoryView();
@@ -623,26 +563,16 @@ async function deleteSavedTable(tableId) {
 }
 
 // Initialize the app when page loads
-window.addEventListener('load', initializeApp);// Global variables
-let expenses = [];
-let editingExpenseId = null;
-let savedTables = [];
-let currentTab = 'current';
-let githubConfig = {
-    token: '',
-    repo: '',
-    owner: '',
-    connected: false
-};
+window.addEventListener('load', initializeApp); // State initialized in modules/state.js
 
 // Initialize data on page load
 function initializeApp() {
-    savedTables = loadSavedData(savedTables);
-    githubConfig = loadGitHubConfig();
+    state.savedTables = loadSavedData(state.savedTables);
+    state.githubConfig = loadGitHubConfig();
     updateTable();
     updateHistoryView();
-    updateGitHubStatus(githubConfig);
-    updateGitHubUI(githubConfig);
+    updateGitHubStatus(state.githubConfig);
+    updateGitHubUI(state.githubConfig);
 
 }
 
@@ -696,14 +626,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-            if (editingExpenseId) {
+            if (state.editingExpenseId) {
                 cancelEdit();
             } else {
                 closeModal();
             }
         }
-        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && editingExpenseId) {
-            saveEdit(editingExpenseId);
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && state.editingExpenseId) {
+            saveEdit(state.editingExpenseId);
         }
     });
 });
