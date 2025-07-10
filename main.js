@@ -4,6 +4,8 @@ import { updateGitHubStatus, updateGitHubUI, logSync, connectGitHub, syncFromGit
 import { downloadCSV } from "./modules/csv.js";
 import { state } from "./modules/state.js";
 
+let refreshAfterSave = false;
+
 
 
 async function connectGitHubWrapper() {
@@ -261,6 +263,13 @@ function cancelEdit() {
     updateTable();
 }
 
+function clearTableData() {
+    state.expenses = [];
+    state.editingExpenseId = null;
+    state.activeTableId = null;
+    updateTable();
+}
+
 function toggleSettled(id) {
     const expense = state.expenses.find(exp => exp.id === id);
     if (expense) {
@@ -275,12 +284,21 @@ async function refreshTable() {
         showAlert('Please save or cancel the current edit before refreshing.', 'warning');
         return;
     }
-    const confirmed = await showConfirm('Are you sure you want to clear all expenses? This action cannot be undone.', 'Clear All Expenses');
-    if (confirmed) {
-        state.expenses = [];
-        state.editingExpenseId = null;
-        updateTable();
-        autoSaveActiveTable();
+    if (state.expenses.length === 0) {
+        return;
+    }
+
+    if (state.activeTableId) {
+        const saveChanges = await showConfirm('Save changes before refreshing?', 'Refresh Table');
+        if (saveChanges) {
+            autoSaveActiveTable();
+        }
+        const confirmed = await showConfirm('Are you sure you want to clear all expenses? This action cannot be undone.', 'Clear All Expenses');
+        if (confirmed) {
+            clearTableData();
+        }
+    } else {
+        openSaveModal(true);
     }
 }
 
@@ -331,7 +349,7 @@ function formatDateForGoogle(date) {
     return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 }
 
-function openSaveModal() {
+function openSaveModal(forRefresh = false) {
     if (state.expenses.length === 0) {
         showAlert('No expenses to save! Add some expenses first.', 'warning');
         return;
@@ -340,12 +358,19 @@ function openSaveModal() {
         showAlert('Please save or cancel the current edit before saving the table.', 'warning');
         return;
     }
+    refreshAfterSave = forRefresh;
+    const proceedBtn = document.getElementById('proceedWithoutSaveBtn');
+    proceedBtn.style.display = forRefresh ? 'inline-block' : 'none';
+    const titleEl = document.querySelector('#saveModal h2');
+    titleEl.textContent = forRefresh ? 'Save Table Before Refresh' : 'Save Current Table';
     document.getElementById('saveModal').style.display = 'block';
 }
 
 function closeSaveModal() {
     document.getElementById('saveModal').style.display = 'none';
     document.getElementById('saveForm').reset();
+    document.getElementById('proceedWithoutSaveBtn').style.display = 'none';
+    refreshAfterSave = false;
 }
 
 function saveCurrentTable(name, description) {
@@ -368,10 +393,14 @@ function saveCurrentTable(name, description) {
 
     updateHistoryView();
     closeSaveModal();
-    
+
     // Show success message
     const syncStatus = state.githubConfig.connected ? " and synced to GitHub" : "";
     showAlert(`Table "${name}" saved to History${syncStatus}! (Kept for 150 days)`, 'success');
+
+    if (refreshAfterSave) {
+        clearTableData();
+    }
 }
 
 function updateHistoryView() {
@@ -672,6 +701,11 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     document.getElementById('alertOkBtn').onclick = function() {
         closeAlert(true);
+    };
+
+    document.getElementById('proceedWithoutSaveBtn').onclick = function() {
+        closeSaveModal();
+        clearTableData();
     };
 
     document.addEventListener('keydown', function(e) {

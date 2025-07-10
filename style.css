@@ -364,6 +364,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
     --btn-color: #212529;
 }
 
+.btn-danger {
+    --btn-bg: var(--btn-danger-bg);
+    --btn-hover-bg: var(--btn-danger-hover-bg);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
