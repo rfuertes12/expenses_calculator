@@ -8,101 +8,94 @@
 </head>
 <body>
     <div class="container">
-        <h1>💰 Monthly Expenses Tracker</h1>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('current')">📝 Current Bills</button>
-            <button class="tab" onclick="switchTab('history')">📚 History</button>
-            <button class="tab" onclick="switchTab('sync')">☁️ Cloud Sync</button>
-        </div>
-
-        <!-- Current Bills Tab -->
-        <div id="current-tab" class="tab-content active">
-            <button class="add-expense-btn" onclick="openModal()">
-                ➕ Add New Expense
-            </button>
-
-            <div class="table-container">
-                <div class="table-actions">
-                    <button class="btn btn-save-table" onclick="openSaveModal()">💾 Save Table</button>
-                    <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
-                    <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
-                    <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
-                    <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
-                </div>
-                
-                <div id="tableContent">
-                    <div class="empty-state">
-                        <div class="empty-icon">📝</div>
-                        <h3>No expenses added yet</h3>
-                        <p>Click "Add New Expense" to get started</p>
+        <header>
+            <h1>💰 Monthly Expenses Tracker</h1>
+            <nav class="tabs">
+                <button class="tab active" onclick="switchTab('current')" aria-label="Current Bills">📝 Current Bills</button>
+                <button class="tab" onclick="switchTab('history')" aria-label="History">📚 History</button>
+                <button class="tab" onclick="switchTab('sync')" aria-label="Cloud Sync">☁️ Cloud Sync</button>
+            </nav>
+        </header>
+        <main>
+            <section id="current-tab" class="tab-content active">
+                <button class="add-expense-btn" onclick="openModal()">
+                    ➕ Add New Expense
+                </button>
+                <div class="table-container">
+                    <div class="table-actions">
+                        <button class="btn btn-save-table" onclick="openSaveModal()">💾 Save Table</button>
+                        <button class="btn btn-export" onclick="exportToCSV()">📊 Export CSV</button>
+                        <button class="btn btn-calendar" onclick="addAllToCalendar()">📅 Add to Google Calendar</button>
+                        <button class="btn btn-refresh" onclick="refreshTable()">🔄 Refresh Table</button>
+                        <button class="btn btn-print" onclick="printTable()">🖨️ Print</button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- History Tab -->
-        <div id="history-tab" class="tab-content">
-            <div id="historyContent">
-                <div class="empty-history">
-                    <div class="empty-icon">📚</div>
-                    <h3>No saved tables yet</h3>
-                    <p>Save your current bill table to start building your history</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cloud Sync Tab -->
-        <div id="sync-tab" class="tab-content">
-            <div class="github-setup">
-                <h3>☁️ GitHub Cloud Sync</h3>
-                <p>Sync your expense history across all your devices using GitHub as cloud storage.</p>
-                
-                <div class="github-status">
-                    <div class="status-indicator" id="githubStatus"></div>
-                    <span id="githubStatusText">Not connected</span>
-                </div>
-
-                <div class="github-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="githubToken">GitHub Personal Access Token:</label>
-                            <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
-                        </div>
-                        <div class="form-group">
-                            <label for="githubRepo">Repository Name:</label>
-                            <input type="text" id="githubRepo" placeholder="expense-tracker-data">
+                    <div id="tableContent">
+                        <div class="empty-state">
+                            <div class="empty-icon">📝</div>
+                            <h3>No expenses added yet</h3>
+                            <p>Click "Add New Expense" to get started</p>
                         </div>
                     </div>
-                    
-                    <div class="sync-actions">
-                        <button class="btn btn-github" onclick="connectGitHub()">🔗 Connect GitHub</button>
-                        <button class="btn btn-sync" onclick="syncFromGitHub()" id="syncDownBtn" disabled>⬇️ Download from GitHub</button>
-                        <button class="btn btn-secondary" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
+                </div>
+            </section>
+            <section id="history-tab" class="tab-content">
+                <div id="historyContent">
+                    <div class="empty-history">
+                        <div class="empty-icon">📚</div>
+                        <h3>No saved tables yet</h3>
+                        <p>Save your current bill table to start building your history</p>
                     </div>
                 </div>
-
-                <div class="sync-info">
-                    <h4>📋 How Auto-Sync Works:</h4>
-                    <ol style="margin: 10px 0; padding-left: 20px;">
-                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
-                        <li>Click "Generate new token (classic)"</li>
-                        <li>Give it a name like "Expense Tracker"</li>
-                        <li>Select scopes: <code>repo</code> (for private repos) or <code>public_repo</code> (for public repos)</li>
-                        <li>Copy the token and paste it above, then click "Connect GitHub"</li>
-                        <li><strong>✨ That's it!</strong> Every time you save a table, it automatically syncs to GitHub</li>
-                        <li>On other devices: Connect GitHub → Download from GitHub to get your data</li>
-                    </ol>
-                    <p><strong>🔒 Privacy:</strong> Your token is stored locally and never sent to third parties. Data is encrypted before uploading.</p>
-                    <p><strong>📅 Storage:</strong> Local history keeps 150 days, GitHub keeps everything forever as your permanent backup.</p>
+            </section>
+            <section id="sync-tab" class="tab-content">
+                <div class="github-setup">
+                    <h3>☁️ GitHub Cloud Sync</h3>
+                    <p>Sync your expense history across all your devices using GitHub as cloud storage.</p>
+                    <div class="github-status">
+                        <div class="status-indicator" id="githubStatus"></div>
+                        <span id="githubStatusText">Not connected</span>
+                    </div>
+                    <form id="githubForm" class="github-form" onsubmit="connectGitHub(); return false;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="githubToken">GitHub Personal Access Token:</label>
+                                <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="githubRepo">Repository Name:</label>
+                                <input type="text" id="githubRepo" placeholder="expense-tracker-data" required>
+                            </div>
+                        </div>
+                        <div class="sync-actions">
+                            <button type="submit" class="btn btn-github">🔗 Connect GitHub</button>
+                            <button type="button" class="btn btn-sync" onclick="syncFromGitHub()" id="syncDownBtn" disabled>⬇️ Download from GitHub</button>
+                            <button type="button" class="btn btn-secondary" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
+                        </div>
+                    </form>
+                    <div class="sync-info">
+                        <h4>📋 How Auto-Sync Works:</h4>
+                        <ol style="margin: 10px 0; padding-left: 20px;">
+                            <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Personal Access Tokens</a></li>
+                            <li>Click "Generate new token (classic)"</li>
+                            <li>Give it a name like "Expense Tracker"</li>
+                            <li>Select scopes: <code>repo</code> (for private repos) or <code>public_repo</code> (for public repos)</li>
+                            <li>Copy the token and paste it above, then click "Connect GitHub"</li>
+                            <li><strong>✨ That's it!</strong> Every time you save a table, it automatically syncs to GitHub</li>
+                            <li>On other devices: Connect GitHub → Download from GitHub to get your data</li>
+                        </ol>
+                        <p><strong>🔒 Privacy:</strong> Your token is stored locally and never sent to third parties. Data is encrypted before uploading.</p>
+                        <p><strong>📅 Storage:</strong> Local history keeps 150 days, GitHub keeps everything forever as your permanent backup.</p>
+                    </div>
                 </div>
-            </div>
-
-            <div id="syncLog" style="display: none;">
-                <h4>🔄 Sync Activity</h4>
-                <div id="syncLogContent" style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
-            </div>
-        </div>
+                <div id="syncLog" style="display: none;">
+                    <h4>🔄 Sync Activity</h4>
+                    <div id="syncLogContent" style="background: #f8f9fa; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+                </div>
+            </section>
+        </main>
+        <footer style="text-align: center; margin-top: 40px; font-size: 14px; color: #6c757d;">
+            © 2025 Expense Tracker
+        </footer>
     </div>
 
     <!-- Custom Alert Modal -->
@@ -123,18 +116,15 @@
         <div class="modal-content">
             <span class="close" onclick="closeSaveModal()">&times;</span>
             <h2>Save Current Table</h2>
-            
             <form id="saveForm">
                 <div class="form-group">
                     <label for="tableName">Table Name:</label>
                     <input type="text" id="tableName" name="tableName" required placeholder="e.g., January 2025 Bills">
                 </div>
-                
                 <div class="form-group">
                     <label for="tableDescription">Description (Optional):</label>
                     <input type="text" id="tableDescription" name="tableDescription" placeholder="e.g., First payout of the month">
                 </div>
-                
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button>
                     <button type="submit" class="btn btn-primary">💾 Save Table</button>
@@ -148,28 +138,23 @@
         <div class="modal-content">
             <span class="close" onclick="closeModal()">&times;</span>
             <h2>Add New Expense</h2>
-            
             <form id="expenseForm">
                 <div class="form-group">
                     <label for="biller">Biller Name:</label>
                     <input type="text" id="biller" name="biller" required placeholder="e.g., Electric Company">
                 </div>
-                
                 <div class="form-group">
                     <label for="description">Bill Description:</label>
                     <input type="text" id="description" name="description" required placeholder="e.g., Monthly Electric Bill">
                 </div>
-                
                 <div class="form-group">
                     <label for="amount">Amount:</label>
                     <input type="number" id="amount" name="amount" step="0.01" min="0" required placeholder="0.00">
                 </div>
-                
                 <div class="form-group">
                     <label for="dueDate">Due Date:</label>
                     <input type="date" id="dueDate" name="dueDate" required>
                 </div>
-                
                 <div class="button-group">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
                     <button type="button" class="btn btn-refresh" onclick="refreshForm()">Refresh</button>
@@ -179,6 +164,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
