@@ -62,7 +62,8 @@ function addExpense(biller, description, amount, dueDate) {
         biller: biller,
         description: description,
         amount: parseFloat(amount),
-        dueDate: dueDate
+        dueDate: dueDate,
+        settled: false
     };
     state.expenses.push(expense);
     updateTable();
@@ -88,6 +89,7 @@ function updateTable() {
     });
 
     const total = state.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const totalSettled = state.expenses.reduce((sum, expense) => expense.settled ? sum + expense.amount : sum, 0);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -100,6 +102,7 @@ function updateTable() {
                     <th>Amount</th>
                     <th>Due Date</th>
                     <th>Priority</th>
+                    <th>Settled</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -131,6 +134,9 @@ function updateTable() {
         });
         
         const isEditing = state.editingExpenseId === expense.id;
+        if (expense.settled) {
+            rowClass += ' settled-row';
+        }
         if (isEditing) {
             rowClass += ' editing-row';
         }
@@ -143,6 +149,7 @@ function updateTable() {
                     <td data-label="Amount"><input type="number" class="editable-input" id="edit-amount-${expense.id}" value="${expense.amount}" step="0.01" min="0"></td>
                     <td data-label="Due Date"><input type="date" class="editable-input" id="edit-dueDate-${expense.id}" value="${expense.dueDate}"></td>
                     <td data-label="Priority">${priorityBadge}</td>
+                    <td data-label="Settled"><input type="checkbox" ${expense.settled ? 'checked' : ''} disabled></td>
                     <td data-label="Action">
                         <button class="btn btn-save" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="saveEdit(${expense.id})">💾</button>
                         <button class="btn btn-cancel-edit" style="padding: 4px 8px; font-size: 11px;" onclick="cancelEdit()">❌</button>
@@ -157,6 +164,7 @@ function updateTable() {
                     <td data-label="Amount" class="amount">₱${expense.amount.toFixed(2)}</td>
                     <td data-label="Due Date" class="${dueDateClass}">${formattedDate}</td>
                     <td data-label="Priority">${priorityBadge}</td>
+                    <td data-label="Settled"><input type="checkbox" ${expense.settled ? 'checked' : ''} onchange="toggleSettled(${expense.id})"></td>
                     <td data-label="Action">
                         <button class="btn btn-edit" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="editExpense(${expense.id})">✏️</button>
                         <button class="btn btn-calendar" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="addToCalendar(${expense.id})">📅</button>
@@ -171,8 +179,12 @@ function updateTable() {
             </tbody>
             <tfoot>
                 <tr class="total-row">
-                    <td colspan="3"><strong>Total Monthly Expenses</strong></td>
+                    <td colspan="4"><strong>Total Monthly Expenses</strong></td>
                     <td colspan="3"><strong>₱${total.toFixed(2)}</strong></td>
+                </tr>
+                <tr class="settled-total-row">
+                    <td colspan="4"><strong>Total Settled Expenses</strong></td>
+                    <td colspan="3"><strong>₱${totalSettled.toFixed(2)}</strong></td>
                 </tr>
             </tfoot>
         </table>
@@ -231,6 +243,14 @@ function saveEdit(id) {
 function cancelEdit() {
     state.editingExpenseId = null;
     updateTable();
+}
+
+function toggleSettled(id) {
+    const expense = state.expenses.find(exp => exp.id === id);
+    if (expense) {
+        expense.settled = !expense.settled;
+        updateTable();
+    }
 }
 
 async function refreshTable() {
@@ -440,6 +460,8 @@ function viewSavedTable(tableId) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
+    const totalSettled = table.expenses.reduce((sum, exp) => exp.settled ? sum + exp.amount : sum, 0);
+
     let tableHTML = `
         <div class="modal-content" style="max-width: 90%; max-height: 80%; overflow-y: auto;">
             <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
@@ -455,6 +477,7 @@ function viewSavedTable(tableId) {
                         <th style="padding: 12px; text-align: left;">Amount</th>
                         <th style="padding: 12px; text-align: left;">Due Date</th>
                         <th style="padding: 12px; text-align: left;">Priority</th>
+                        <th style="padding: 12px; text-align: left;">Settled</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -492,6 +515,7 @@ function viewSavedTable(tableId) {
                 <td data-label="Amount" style="${rowStyle} font-weight: 600; color: #dc3545;">₱${expense.amount.toFixed(2)}</td>
                 <td data-label="Due Date" style="${rowStyle}">${formattedDate}</td>
                 <td data-label="Priority" style="${rowStyle}">${priorityBadge}</td>
+                <td data-label="Settled" style="${rowStyle} text-align:center;"><input type="checkbox" ${expense.settled ? 'checked' : ''} disabled></td>
             </tr>
         `;
     });
@@ -500,8 +524,12 @@ function viewSavedTable(tableId) {
                 </tbody>
                 <tfoot>
                     <tr style="background: linear-gradient(45deg, #28a745, #20c997); color: white; font-weight: 700;">
-                        <td colspan="2" style="padding: 12px;"><strong>Total</strong></td>
+                        <td colspan="3" style="padding: 12px;"><strong>Total</strong></td>
                         <td colspan="3" style="padding: 12px;"><strong>₱${table.totalAmount.toFixed(2)}</strong></td>
+                    </tr>
+                    <tr style="background: linear-gradient(45deg, #6c757d, #adb5bd); color: white; font-weight: 700;">
+                        <td colspan="3" style="padding: 12px;"><strong>Settled</strong></td>
+                        <td colspan="3" style="padding: 12px;"><strong>₱${totalSettled.toFixed(2)}</strong></td>
                     </tr>
                 </tfoot>
             </table>
