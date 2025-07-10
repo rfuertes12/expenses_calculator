@@ -4,6 +4,8 @@ export class AppState {
         this.editingExpenseId = null;
         this.savedTables = [];
         this.activeTableId = null;
+        this.currentPage = 1;
+        this.itemsPerPage = 10;
         this.currentTab = 'current';
         this.githubConfig = {
             token: '',
