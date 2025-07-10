@@ -81,6 +81,8 @@ function updateTable() {
                 <p>Click "Add New Expense" to get started</p>
             </div>
         `;
+        document.getElementById('totalAmountDisplay').textContent = '₱0.00';
+        document.getElementById('settledAmountDisplay').textContent = '₱0.00';
         return;
     }
 
@@ -178,18 +180,11 @@ function updateTable() {
     
     tableHTML += `
             </tbody>
-            <tfoot>
-                <tr class="total-row">
-                    <td colspan="4"><strong>Total Monthly Expenses</strong></td>
-                    <td colspan="3"><strong>₱${total.toFixed(2)}</strong></td>
-                </tr>
-                <tr class="settled-total-row">
-                    <td colspan="4"><strong>Total Settled Expenses</strong></td>
-                    <td colspan="3"><strong>₱${totalSettled.toFixed(2)}</strong></td>
-                </tr>
-            </tfoot>
         </table>
     `;
+
+    document.getElementById('totalAmountDisplay').textContent = `₱${total.toFixed(2)}`;
+    document.getElementById('settledAmountDisplay').textContent = `₱${totalSettled.toFixed(2)}`;
     
     tableContent.innerHTML = tableHTML;
 }
