@@ -67,6 +67,7 @@ function addExpense(biller, description, amount, dueDate) {
     };
     state.expenses.push(expense);
     updateTable();
+    autoSaveActiveTable();
 }
 
 function updateTable() {
@@ -193,6 +194,24 @@ function updateTable() {
     tableContent.innerHTML = tableHTML;
 }
 
+function autoSaveActiveTable() {
+    if (!state.activeTableId) return;
+    const idx = state.savedTables.findIndex(t => t.id === state.activeTableId);
+    if (idx === -1) {
+        state.activeTableId = null;
+        return;
+    }
+    const table = state.savedTables[idx];
+    table.expenses = JSON.parse(JSON.stringify(state.expenses));
+    table.totalAmount = state.expenses.reduce((sum, e) => sum + e.amount, 0);
+    table.savedDate = new Date().toISOString();
+    saveDataToLocalStorage(state.savedTables);
+    if (state.githubConfig.connected) {
+        autoSyncToGitHub(state.githubConfig, state.savedTables);
+    }
+    updateHistoryView();
+}
+
 async function removeExpense(id) {
     if (state.editingExpenseId) {
         showAlert('Please save or cancel the current edit before deleting.', 'warning');
@@ -202,6 +221,7 @@ async function removeExpense(id) {
     if (confirmed) {
         state.expenses = state.expenses.filter(expense => expense.id !== id);
         updateTable();
+        autoSaveActiveTable();
     }
 }
 
@@ -238,6 +258,7 @@ function saveEdit(id) {
 
     state.editingExpenseId = null;
     updateTable();
+    autoSaveActiveTable();
 }
 
 function cancelEdit() {
@@ -250,6 +271,7 @@ function toggleSettled(id) {
     if (expense) {
         expense.settled = !expense.settled;
         updateTable();
+        autoSaveActiveTable();
     }
 }
 
@@ -263,6 +285,7 @@ async function refreshTable() {
         state.expenses = [];
         state.editingExpenseId = null;
         updateTable();
+        autoSaveActiveTable();
     }
 }
 
@@ -555,6 +578,7 @@ async function restoreTable(tableId) {
     }
 
     state.expenses = JSON.parse(JSON.stringify(table.expenses)); // Deep copy
+    state.activeTableId = tableId;
     switchTab('current');
     updateTable();
     showAlert(`Table "${table.name}" restored successfully!`, 'success');
@@ -578,6 +602,9 @@ async function deleteSavedTable(tableId) {
     const confirmed = await showConfirm(`Are you sure you want to delete "${table.name}"? This action cannot be undone.`, 'Delete Table');
     if (confirmed) {
         state.savedTables = state.savedTables.filter(t => t.id !== tableId);
+        if (state.activeTableId === tableId) {
+            state.activeTableId = null;
+        }
         saveDataToLocalStorage(state.savedTables); // Update localStorage
         
         // Auto-sync deletion to GitHub if connected
