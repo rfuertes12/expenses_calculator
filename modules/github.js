@@ -50,7 +50,10 @@ export function logSync(message) {
     const timestamp = new Date().toLocaleTimeString();
 
     logDiv.style.display = 'block';
-    logContent.innerHTML += `[${timestamp}] ${message}\n`;
+
+    const line = document.createElement('div');
+    line.textContent = `[${timestamp}] ${message}`;
+    logContent.appendChild(line);
     logContent.scrollTop = logContent.scrollHeight;
 }
 
