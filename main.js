@@ -136,12 +136,12 @@ function updateTable() {
         if (isEditing) {
             tableHTML += `
                 <tr class="${rowClass}">
-                    <td><input type="text" class="editable-input" id="edit-biller-${expense.id}" value="${expense.biller}"></td>
-                    <td><input type="text" class="editable-input" id="edit-description-${expense.id}" value="${expense.description}"></td>
-                    <td><input type="number" class="editable-input" id="edit-amount-${expense.id}" value="${expense.amount}" step="0.01" min="0"></td>
-                    <td><input type="date" class="editable-input" id="edit-dueDate-${expense.id}" value="${expense.dueDate}"></td>
-                    <td>${priorityBadge}</td>
-                    <td>
+                    <td data-label="Biller"><input type="text" class="editable-input" id="edit-biller-${expense.id}" value="${expense.biller}"></td>
+                    <td data-label="Description"><input type="text" class="editable-input" id="edit-description-${expense.id}" value="${expense.description}"></td>
+                    <td data-label="Amount"><input type="number" class="editable-input" id="edit-amount-${expense.id}" value="${expense.amount}" step="0.01" min="0"></td>
+                    <td data-label="Due Date"><input type="date" class="editable-input" id="edit-dueDate-${expense.id}" value="${expense.dueDate}"></td>
+                    <td data-label="Priority">${priorityBadge}</td>
+                    <td data-label="Action">
                         <button class="btn btn-save" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="saveEdit(${expense.id})">💾</button>
                         <button class="btn btn-cancel-edit" style="padding: 4px 8px; font-size: 11px;" onclick="cancelEdit()">❌</button>
                     </td>
@@ -150,12 +150,12 @@ function updateTable() {
         } else {
             tableHTML += `
                 <tr class="${rowClass}">
-                    <td>${expense.biller}</td>
-                    <td>${expense.description}</td>
-                    <td class="amount">₱${expense.amount.toFixed(2)}</td>
-                    <td class="${dueDateClass}">${formattedDate}</td>
-                    <td>${priorityBadge}</td>
-                    <td>
+                    <td data-label="Biller">${expense.biller}</td>
+                    <td data-label="Description">${expense.description}</td>
+                    <td data-label="Amount" class="amount">₱${expense.amount.toFixed(2)}</td>
+                    <td data-label="Due Date" class="${dueDateClass}">${formattedDate}</td>
+                    <td data-label="Priority">${priorityBadge}</td>
+                    <td data-label="Action">
                         <button class="btn btn-edit" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="editExpense(${expense.id})">✏️</button>
                         <button class="btn btn-calendar" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="addToCalendar(${expense.id})">📅</button>
                         <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 11px;" onclick="removeExpense(${expense.id})">🗑️</button>
@@ -520,11 +520,11 @@ function viewSavedTable(tableId) {
         
         tableHTML += `
             <tr>
-                <td style="${rowStyle}">${expense.biller}</td>
-                <td style="${rowStyle}">${expense.description}</td>
-                <td style="${rowStyle} font-weight: 600; color: #dc3545;">₱${expense.amount.toFixed(2)}</td>
-                <td style="${rowStyle}">${formattedDate}</td>
-                <td style="${rowStyle}">${priorityBadge}</td>
+                <td data-label="Biller" style="${rowStyle}">${expense.biller}</td>
+                <td data-label="Description" style="${rowStyle}">${expense.description}</td>
+                <td data-label="Amount" style="${rowStyle} font-weight: 600; color: #dc3545;">₱${expense.amount.toFixed(2)}</td>
+                <td data-label="Due Date" style="${rowStyle}">${formattedDate}</td>
+                <td data-label="Priority" style="${rowStyle}">${priorityBadge}</td>
             </tr>
         `;
     });

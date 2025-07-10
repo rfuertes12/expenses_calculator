@@ -4,6 +4,25 @@
     box-sizing: border-box;
 }
 
+:root {
+    --btn-primary-bg: linear-gradient(45deg, #667eea, #764ba2);
+    --btn-primary-hover-bg: linear-gradient(45deg, #5a6fd8, #6b4aa2);
+    --btn-secondary-bg: #6c757d;
+    --btn-secondary-hover-bg: #545b62;
+    --btn-info-bg: #17a2b8;
+    --btn-info-hover-bg: #138496;
+    --btn-success-bg: #28a745;
+    --btn-success-hover-bg: #218838;
+    --btn-warning-bg: #ffc107;
+    --btn-warning-hover-bg: #e0a800;
+    --btn-calendar-bg: #4285f4;
+    --btn-calendar-hover-bg: #3367d6;
+    --btn-github-bg: #24292e;
+    --btn-github-hover-bg: #1a1e22;
+    --btn-danger-bg: #dc3545;
+    --btn-danger-hover-bg: #c82333;
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -105,23 +124,13 @@ body {
 }
 
 .btn-github {
-    background: #24292e;
-    color: white;
-}
-
-.btn-github:hover {
-    background: #1a1e22;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-github-bg);
+    --btn-hover-bg: var(--btn-github-hover-bg);
 }
 
 .btn-sync {
-    background: #17a2b8;
-    color: white;
-}
-
-.btn-sync:hover {
-    background: #138496;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-info-bg);
+    --btn-hover-bg: var(--btn-info-hover-bg);
 }
 
 .sync-info {
@@ -248,43 +257,41 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
     font-weight: 600;
     transition: all 0.3s ease;
     min-width: 80px;
+    background: var(--btn-bg, var(--btn-secondary-bg));
+    color: var(--btn-color, white);
+}
+
+.btn:hover {
+    background: var(--btn-hover-bg, var(--btn-secondary-hover-bg));
+    transform: translateY(var(--btn-hover-translate, -1px));
 }
 
 .btn-primary {
-    background: linear-gradient(45deg, #667eea, #764ba2);
-    color: white;
+    --btn-bg: var(--btn-primary-bg);
+    --btn-hover-bg: var(--btn-primary-hover-bg);
+    --btn-hover-translate: -2px;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
 .btn-secondary {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #545b62;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-secondary-bg);
+    --btn-hover-bg: var(--btn-secondary-hover-bg);
 }
 
 .btn-refresh {
-    background: #17a2b8;
-    color: white;
-}
-
-.btn-refresh:hover {
-    background: #138496;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-info-bg);
+    --btn-hover-bg: var(--btn-info-hover-bg);
 }
 
 .table-container {
     background: white;
     border-radius: 15px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     margin-top: 20px;
 }
@@ -299,23 +306,14 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
 }
 
 .btn-export {
-    background: #28a745;
-    color: white;
-}
-
-.btn-export:hover {
-    background: #218838;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-success-bg);
+    --btn-hover-bg: var(--btn-success-hover-bg);
 }
 
 .btn-print {
-    background: #ffc107;
-    color: #212529;
-}
-
-.btn-print:hover {
-    background: #e0a800;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-warning-bg);
+    --btn-hover-bg: var(--btn-warning-hover-bg);
+    --btn-color: #212529;
 }
 
 table {
@@ -379,43 +377,23 @@ tbody tr:hover {
 }
 
 .btn-calendar {
-    background: #4285f4;
-    color: white;
-}
-
-.btn-calendar:hover {
-    background: #3367d6;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-calendar-bg);
+    --btn-hover-bg: var(--btn-calendar-hover-bg);
 }
 
 .btn-edit {
-    background: #17a2b8;
-    color: white;
-}
-
-.btn-edit:hover {
-    background: #138496;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-info-bg);
+    --btn-hover-bg: var(--btn-info-hover-bg);
 }
 
 .btn-save {
-    background: #28a745;
-    color: white;
-}
-
-.btn-save:hover {
-    background: #218838;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-success-bg);
+    --btn-hover-bg: var(--btn-success-hover-bg);
 }
 
 .btn-cancel-edit {
-    background: #6c757d;
-    color: white;
-}
-
-.btn-cancel-edit:hover {
-    background: #545b62;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-secondary-bg);
+    --btn-hover-bg: var(--btn-secondary-hover-bg);
 }
 
 .editable-input {
@@ -462,13 +440,8 @@ tbody tr:hover {
 }
 
 .btn-save-table {
-    background: #28a745;
-    color: white;
-}
-
-.btn-save-table:hover {
-    background: #218838;
-    transform: translateY(-1px);
+    --btn-bg: var(--btn-success-bg);
+    --btn-hover-bg: var(--btn-success-hover-bg);
 }
 
 /* Custom Alert/Confirm Modal Styles */
@@ -580,30 +553,19 @@ tbody tr:hover {
 }
 
 .btn-view {
-    background: #17a2b8;
-    color: white;
-}
-
-.btn-view:hover {
-    background: #138496;
+    --btn-bg: var(--btn-info-bg);
+    --btn-hover-bg: var(--btn-info-hover-bg);
 }
 
 .btn-restore {
-    background: #ffc107;
-    color: #212529;
-}
-
-.btn-restore:hover {
-    background: #e0a800;
+    --btn-bg: var(--btn-warning-bg);
+    --btn-hover-bg: var(--btn-warning-hover-bg);
+    --btn-color: #212529;
 }
 
 .btn-delete-history {
-    background: #dc3545;
-    color: white;
-}
-
-.btn-delete-history:hover {
-    background: #c82333;
+    --btn-bg: var(--btn-danger-bg);
+    --btn-hover-bg: var(--btn-danger-hover-bg);
 }
 
 .empty-history {
@@ -646,6 +608,33 @@ tbody tr:hover {
 
     .form-row {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+
+    thead {
+        display: none;
+    }
+
+    tr {
+        margin-bottom: 15px;
+    }
+
+    td {
+        position: relative;
+        padding-left: 50%;
+    }
+
+    td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        top: 10px;
+        font-weight: 600;
     }
 }
 
