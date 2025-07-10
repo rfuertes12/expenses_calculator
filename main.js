@@ -93,6 +93,13 @@ function updateTable() {
         return new Date(a.dueDate) - new Date(b.dueDate);
     });
 
+    const totalPages = Math.ceil(sortedExpenses.length / state.itemsPerPage);
+    if (state.currentPage > totalPages) {
+        state.currentPage = totalPages || 1;
+    }
+    const startIdx = (state.currentPage - 1) * state.itemsPerPage;
+    const pageExpenses = sortedExpenses.slice(startIdx, startIdx + state.itemsPerPage);
+
     const total = state.expenses.reduce((sum, expense) => sum + expense.amount, 0);
     const totalSettled = state.expenses.reduce((sum, expense) => expense.settled ? sum + expense.amount : sum, 0);
     const today = new Date();
@@ -114,7 +121,7 @@ function updateTable() {
             <tbody>
     `;
     
-    sortedExpenses.forEach(expense => {
+    pageExpenses.forEach(expense => {
         const dueDate = new Date(expense.dueDate);
         dueDate.setHours(0, 0, 0, 0);
         const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
@@ -189,6 +196,38 @@ function updateTable() {
     document.getElementById('settledAmountDisplay').textContent = `₱${totalSettled.toFixed(2)}`;
     
     tableContent.innerHTML = tableHTML;
+    updatePagination();
+}
+
+function updatePagination() {
+    const pagination = document.getElementById('pagination');
+    const totalPages = Math.ceil(state.expenses.length / state.itemsPerPage);
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+    const prevDisabled = state.currentPage === 1 ? 'disabled' : '';
+    const nextDisabled = state.currentPage === totalPages ? 'disabled' : '';
+    pagination.innerHTML = `
+        <button class="btn btn-secondary" onclick="prevPage()" ${prevDisabled}>Previous</button>
+        <span class="page-info">Page ${state.currentPage} of ${totalPages}</span>
+        <button class="btn btn-secondary" onclick="nextPage()" ${nextDisabled}>Next</button>
+    `;
+}
+
+function prevPage() {
+    if (state.currentPage > 1) {
+        state.currentPage--;
+        updateTable();
+    }
+}
+
+function nextPage() {
+    const totalPages = Math.ceil(state.expenses.length / state.itemsPerPage);
+    if (state.currentPage < totalPages) {
+        state.currentPage++;
+        updateTable();
+    }
 }
 
 function autoSaveActiveTable() {
@@ -755,5 +794,7 @@ Object.assign(window, {
     viewSavedTable,
     restoreTable,
     exportSavedTable,
-    deleteSavedTable
+    deleteSavedTable,
+    prevPage,
+    nextPage
 });
