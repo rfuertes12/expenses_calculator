@@ -684,6 +684,7 @@ Object.assign(window, {
     editExpense,
     saveEdit,
     cancelEdit,
+    toggleSettled,
     removeExpense,
     addToCalendar,
     viewSavedTable,
