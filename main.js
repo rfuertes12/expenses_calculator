@@ -522,10 +522,10 @@ function updateHistoryView() {
                     ${highPriorityBills > 0 ? `<div class="history-stat" style="background: #fff3cd; color: #856404;">🔥 <strong>${highPriorityBills}</strong> high priority</div>` : ''}
                 </div>
                 <div class="history-actions">
-                    <button class="icon-btn" onclick="viewSavedTable(${table.id})" title="View">👁️</button>
-                    <button class="icon-btn" onclick="restoreTable(${table.id})" title="Restore">🔄</button>
-                    <button class="icon-btn" onclick="exportSavedTable(${table.id})" title="Export">📊</button>
-                    <button class="icon-btn" onclick="deleteSavedTable(${table.id})" title="Delete">🗑️</button>
+                    <button class="btn btn-outline btn-small" onclick="viewSavedTable(${table.id})" title="View">View</button>
+                    <button class="btn btn-outline btn-small" onclick="restoreTable(${table.id})" title="Restore">Restore</button>
+                    <button class="btn btn-outline btn-small" onclick="exportSavedTable(${table.id})" title="Export">Export</button>
+                    <button class="btn btn-outline btn-small" onclick="deleteSavedTable(${table.id})" title="Delete">Delete</button>
                 </div>
             </div>
         `;

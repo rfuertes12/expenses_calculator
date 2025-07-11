@@ -54,30 +54,30 @@ header {
 
 .tabs {
     display: flex;
+    gap: 10px;
     margin-bottom: 30px;
-    border-bottom: 2px solid #e9ecef;
 }
 
 .tab {
-    padding: 12px 24px;
+    padding: 8px 16px;
     cursor: pointer;
-    border: none;
     background: none;
     font-size: 16px;
     font-weight: 600;
     color: #6c757d;
-    border-bottom: 3px solid transparent;
+    border: 1px solid #e9ecef;
+    border-radius: 20px;
     transition: all 0.3s ease;
 }
 
 .tab.active {
     color: #667eea;
-    border-bottom-color: #667eea;
+    border-color: #667eea;
 }
 
 .tab:hover {
+    background: rgba(102, 126, 234, 0.05);
     color: #667eea;
-    background: rgba(102, 126, 234, 0.1);
 }
 
 .tab-content {
@@ -319,6 +319,16 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, 
     min-width: 80px;
     background: var(--btn-bg, var(--btn-secondary-bg));
     color: var(--btn-color, white);
+}
+
+.btn-outline {
+    background: none;
+    color: #333;
+    border: 1px solid #ced4da;
+}
+
+.btn-outline:hover {
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* Smaller icon-only buttons */
