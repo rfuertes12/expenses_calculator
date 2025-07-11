@@ -209,9 +209,9 @@ function updatePagination() {
     const prevDisabled = state.currentPage === 1 ? 'disabled' : '';
     const nextDisabled = state.currentPage === totalPages ? 'disabled' : '';
     pagination.innerHTML = `
-        <button class="btn btn-secondary" onclick="prevPage()" ${prevDisabled}>Previous</button>
+        <button class="btn btn-secondary" onclick="prevPage()" ${prevDisabled} title="Previous">◀️</button>
         <span class="page-info">Page ${state.currentPage} of ${totalPages}</span>
-        <button class="btn btn-secondary" onclick="nextPage()" ${nextDisabled}>Next</button>
+        <button class="btn btn-secondary" onclick="nextPage()" ${nextDisabled} title="Next">▶️</button>
     `;
 }
 
@@ -522,10 +522,10 @@ function updateHistoryView() {
                     ${highPriorityBills > 0 ? `<div class="history-stat" style="background: #fff3cd; color: #856404;">🔥 <strong>${highPriorityBills}</strong> high priority</div>` : ''}
                 </div>
                 <div class="history-actions">
-                    <button class="btn btn-view btn-small" onclick="viewSavedTable(${table.id})">👁️ View</button>
-                    <button class="btn btn-restore btn-small" onclick="restoreTable(${table.id})">🔄 Restore</button>
-                    <button class="btn btn-export btn-small" onclick="exportSavedTable(${table.id})">📊 Export</button>
-                    <button class="btn btn-delete-history btn-small" onclick="deleteSavedTable(${table.id})">🗑️ Delete</button>
+                    <button class="btn btn-view btn-small" onclick="viewSavedTable(${table.id})" title="View">👁️</button>
+                    <button class="btn btn-restore btn-small" onclick="restoreTable(${table.id})" title="Restore">🔄</button>
+                    <button class="btn btn-export btn-small" onclick="exportSavedTable(${table.id})" title="Export">📊</button>
+                    <button class="btn btn-delete-history btn-small" onclick="deleteSavedTable(${table.id})" title="Delete">🗑️</button>
                 </div>
             </div>
         `;

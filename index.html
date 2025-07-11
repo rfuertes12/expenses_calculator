@@ -11,9 +11,9 @@
         <header>
             <h1>💰 Monthly Expenses Tracker</h1>
             <nav class="tabs">
-                <button class="tab active" onclick="switchTab('current')" aria-label="Current Bills">📝 Current Bills</button>
-                <button class="tab" onclick="switchTab('history')" aria-label="History">📚 History</button>
-                <button class="tab" onclick="switchTab('sync')" aria-label="Cloud Sync">☁️ Cloud Sync</button>
+                <button class="tab active" onclick="switchTab('current')" aria-label="Current Bills" title="Current Bills">📝</button>
+                <button class="tab" onclick="switchTab('history')" aria-label="History" title="History">📚</button>
+                <button class="tab" onclick="switchTab('sync')" aria-label="Cloud Sync" title="Cloud Sync">☁️</button>
             </nav>
         </header>
         <main>
@@ -80,9 +80,9 @@
                             </div>
                         </div>
                         <div class="sync-actions">
-                            <button type="submit" class="btn btn-github">🔗 Connect GitHub</button>
-                            <button type="button" class="btn btn-sync" onclick="syncFromGitHub()" id="syncDownBtn" disabled>⬇️ Download from GitHub</button>
-                            <button type="button" class="btn btn-secondary" onclick="disconnectGitHub()" id="disconnectBtn" disabled>🔌 Disconnect</button>
+                            <button type="submit" class="btn btn-github" title="Connect GitHub">🔗</button>
+                            <button type="button" class="btn btn-sync" onclick="syncFromGitHub()" id="syncDownBtn" disabled title="Download from GitHub">⬇️</button>
+                            <button type="button" class="btn btn-secondary" onclick="disconnectGitHub()" id="disconnectBtn" disabled title="Disconnect">🔌</button>
                         </div>
                     </form>
                     <div class="sync-info">
@@ -118,8 +118,8 @@
             <div id="alertTitle" class="alert-title">Notification</div>
             <div id="alertMessage" class="alert-message">This is a message</div>
             <div class="alert-buttons">
-                <button id="alertCancelBtn" class="btn btn-secondary" onclick="closeAlert()" style="display: none;">Cancel</button>
-                <button id="alertOkBtn" class="btn btn-primary" onclick="closeAlert()">OK</button>
+                <button id="alertCancelBtn" class="btn btn-secondary" onclick="closeAlert()" style="display: none;">❌</button>
+                <button id="alertOkBtn" class="btn btn-primary" onclick="closeAlert()">✅</button>
             </div>
         </div>
     </div>
@@ -139,9 +139,9 @@
                     <input type="text" id="tableDescription" name="tableDescription" placeholder="e.g., First payout of the month">
                 </div>
                 <div class="button-group">
-                    <button type="button" class="btn btn-secondary" onclick="closeSaveModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">💾 Save Table</button>
-                    <button type="button" class="btn btn-danger" id="proceedWithoutSaveBtn" style="display: none;">Proceed Without Saving</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeSaveModal()" title="Cancel">❌</button>
+                    <button type="submit" class="btn btn-primary" title="Save Table">💾</button>
+                    <button type="button" class="btn btn-danger" id="proceedWithoutSaveBtn" style="display: none;" title="Proceed Without Saving">⚠️</button>
                 </div>
             </form>
         </div>
@@ -170,9 +170,9 @@
                     <input type="date" id="dueDate" name="dueDate" required>
                 </div>
                 <div class="button-group">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
-                    <button type="button" class="btn btn-refresh" onclick="refreshForm()">Refresh</button>
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()" title="Cancel">❌</button>
+                    <button type="button" class="btn btn-refresh" onclick="refreshForm()" title="Refresh">🔄</button>
+                    <button type="submit" class="btn btn-primary" title="Submit">✅</button>
                 </div>
             </form>
         </div>
