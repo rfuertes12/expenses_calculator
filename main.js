@@ -163,8 +163,8 @@ function updateTable() {
                     <td data-label="Priority">${priorityBadge}</td>
                     <td data-label="Settled"><input type="checkbox" ${expense.settled ? 'checked' : ''} disabled></td>
                     <td data-label="Action">
-                        <button class="btn btn-save" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="saveEdit(${expense.id})">💾</button>
-                        <button class="btn btn-cancel-edit" style="padding: 4px 8px; font-size: 11px;" onclick="cancelEdit()">❌</button>
+                        <button class="icon-btn" style="padding: 4px 8px; font-size: 11px; margin-right: 3px;" onclick="saveEdit(${expense.id})">💾</button>
+                        <button class="icon-btn" style="padding: 4px 8px; font-size: 11px;" onclick="cancelEdit()">❌</button>
                     </td>
                 </tr>
             `;
@@ -178,9 +178,9 @@ function updateTable() {
                     <td data-label="Priority">${priorityBadge}</td>
                     <td data-label="Settled"><input type="checkbox" ${expense.settled ? 'checked' : ''} onchange="toggleSettled(${expense.id})"></td>
                     <td data-label="Action">
-                        <button class="btn btn-edit icon-btn" title="Edit" onclick="editExpense(${expense.id})">✏️</button>
-                        <button class="btn btn-calendar icon-btn" title="Add to Calendar" onclick="addToCalendar(${expense.id})">📅</button>
-                        <button class="btn btn-secondary icon-btn" title="Remove" onclick="removeExpense(${expense.id})">🗑️</button>
+                        <button class="icon-btn" title="Edit" onclick="editExpense(${expense.id})">✏️</button>
+                        <button class="icon-btn" title="Add to Calendar" onclick="addToCalendar(${expense.id})">📅</button>
+                        <button class="icon-btn" title="Remove" onclick="removeExpense(${expense.id})">🗑️</button>
                     </td>
                 </tr>
             `;
@@ -209,9 +209,9 @@ function updatePagination() {
     const prevDisabled = state.currentPage === 1 ? 'disabled' : '';
     const nextDisabled = state.currentPage === totalPages ? 'disabled' : '';
     pagination.innerHTML = `
-        <button class="btn btn-secondary" onclick="prevPage()" ${prevDisabled} title="Previous">◀️</button>
+        <button class="icon-btn" onclick="prevPage()" ${prevDisabled} title="Previous">◀️</button>
         <span class="page-info">Page ${state.currentPage} of ${totalPages}</span>
-        <button class="btn btn-secondary" onclick="nextPage()" ${nextDisabled} title="Next">▶️</button>
+        <button class="icon-btn" onclick="nextPage()" ${nextDisabled} title="Next">▶️</button>
     `;
 }
 
@@ -522,10 +522,10 @@ function updateHistoryView() {
                     ${highPriorityBills > 0 ? `<div class="history-stat" style="background: #fff3cd; color: #856404;">🔥 <strong>${highPriorityBills}</strong> high priority</div>` : ''}
                 </div>
                 <div class="history-actions">
-                    <button class="btn btn-view btn-small" onclick="viewSavedTable(${table.id})" title="View">👁️</button>
-                    <button class="btn btn-restore btn-small" onclick="restoreTable(${table.id})" title="Restore">🔄</button>
-                    <button class="btn btn-export btn-small" onclick="exportSavedTable(${table.id})" title="Export">📊</button>
-                    <button class="btn btn-delete-history btn-small" onclick="deleteSavedTable(${table.id})" title="Delete">🗑️</button>
+                    <button class="icon-btn" onclick="viewSavedTable(${table.id})" title="View">👁️</button>
+                    <button class="icon-btn" onclick="restoreTable(${table.id})" title="Restore">🔄</button>
+                    <button class="icon-btn" onclick="exportSavedTable(${table.id})" title="Export">📊</button>
+                    <button class="icon-btn" onclick="deleteSavedTable(${table.id})" title="Delete">🗑️</button>
                 </div>
             </div>
         `;
