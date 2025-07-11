@@ -32,23 +32,17 @@ body {
 }
 
 .container {
-    width: 1080px;
-    height: 1080px;
-    max-width: calc(100% - 40px);
-    max-height: 1080px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 1080px;
+    margin: 20px auto;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
     padding: 30px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
-    position: fixed;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
     overflow-y: auto;
-    z-index: 100;
     box-sizing: border-box;
+    min-height: calc(100vh - 40px);
 }
 
 header {
