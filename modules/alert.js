@@ -25,11 +25,11 @@ export function showAlert(message, type = 'info', title = null, showCancel = fal
 
         if (showCancel) {
             cancelBtn.style.display = 'block';
-            cancelBtn.textContent = '❌';
-            okBtn.textContent = '✅';
+            cancelBtn.textContent = 'Cancel';
+            okBtn.textContent = 'OK';
         } else {
             cancelBtn.style.display = 'none';
-            okBtn.textContent = '✅';
+            okBtn.textContent = 'OK';
         }
 
         alertCallback = resolve;
